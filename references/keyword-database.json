@@ -1,0 +1,132 @@
+{
+  "grpo": {
+    "category": "Reinforcement Learning",
+    "covered": true,
+    "last_used": "2026-04-03",
+    "tutorial_day": 1
+  },
+  "mixture of experts": {
+    "category": "Architecture",
+    "covered": true,
+    "last_used": "2026-04-03",
+    "tutorial_day": 2
+  },
+  "speculative": {
+    "category": "Inference",
+    "covered": true,
+    "last_used": "2026-04-03",
+    "tutorial_day": 3
+  },
+  "reasoning": {
+    "category": "Agent",
+    "covered": true,
+    "last_used": "2026-04-03",
+    "tutorial_day": 4
+  },
+  "chain of thought": {
+    "category": "Agent",
+    "covered": true,
+    "last_used": "2026-04-03",
+    "tutorial_day": 4
+  },
+  "agent": {
+    "category": "Agent",
+    "covered": true,
+    "last_used": "2026-04-03",
+    "tutorial_day": 5
+  },
+  "quantization": {
+    "category": "Inference",
+    "covered": true,
+    "last_used": "2026-04-03",
+    "tutorial_day": 6
+  },
+  "attention": {
+    "category": "Architecture",
+    "covered": true,
+    "last_used": "2026-04-03",
+    "tutorial_day": 7
+  },
+  "memory": {
+    "category": "Inference",
+    "covered": true,
+    "last_used": "2026-04-03",
+    "tutorial_day": 8
+  },
+  "distillation": {
+    "category": "Training",
+    "covered": false
+  },
+  "mamba": {
+    "category": "Architecture",
+    "covered": false
+  },
+  "information theory": {
+    "category": "Mathematical Foundations",
+    "covered": false
+  },
+  "entropy": {
+    "category": "Mathematical Foundations",
+    "covered": false
+  },
+  "mutual information": {
+    "category": "Mathematical Foundations",
+    "covered": false
+  },
+  "kl divergence": {
+    "category": "Mathematical Foundations",
+    "covered": false
+  },
+  "elbo": {
+    "category": "Mathematical Foundations",
+    "covered": false
+  },
+  "score matching": {
+    "category": "Mathematical Foundations",
+    "covered": false
+  },
+  "flow matching": {
+    "category": "Mathematical Foundations",
+    "covered": false
+  },
+  "long context": {
+    "category": "Inference",
+    "covered": false
+  },
+  "rlhf": {
+    "category": "Reinforcement Learning",
+    "covered": false
+  },
+  "dpo": {
+    "category": "Reinforcement Learning",
+    "covered": false
+  },
+  "orpo": {
+    "category": "Reinforcement Learning",
+    "covered": false
+  },
+  "lora": {
+    "category": "Training",
+    "covered": false
+  },
+  "scaling": {
+    "category": "General",
+    "covered": false
+  },
+  "multimodal": {
+    "category": "Architecture",
+    "covered": false
+  },
+  "routing": {
+    "category": "Architecture",
+    "covered": false
+  },
+  "world model": {
+    "category": "Architecture",
+    "covered": false
+  },
+  "alignment": {
+    "category": "Reinforcement Learning",
+    "covered": false
+  }
+}
