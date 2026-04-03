@@ -4,6 +4,9 @@ difficulty: "Advanced"
 category: "Inference Strategy"
 ---
 
+![Algorithm Animation](../../gifs/04-test-time-compute.gif)
+
+
 # Day 04: Test-Time Compute Scaling -- More Inference Budget, Better Output
 
 > **Watch the animation**: ![Test-Time Compute Animation](../gifs/04-test-time-compute.gif)

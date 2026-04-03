@@ -4,6 +4,9 @@ difficulty: "Advanced"
 category: "Inference Acceleration"
 ---
 
+![Algorithm Animation](../../gifs/03-speculative-decoding.gif)
+
+
 # Day 03: Speculative Decoding -- Lossless Inference Speedup
 
 > **Watch the animation**: ![Speculative Decoding Animation](../gifs/03-speculative-decoding.gif)

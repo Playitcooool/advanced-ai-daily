@@ -17,6 +17,9 @@ prerequisites:
   - "Knowledge of PPO is helpful but not required"
 ---
 
+![Algorithm Animation](../../gifs/01-grpo.gif)
+
+
 # Day 01: GRPO -- Group Relative Policy Optimization
 
 ---
