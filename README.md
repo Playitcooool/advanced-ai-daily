@@ -1,70 +1,84 @@
 # Advanced AI Daily | AI 前沿日报
 
 > Daily tutorials on cutting-edge AI | 每日更新的前沿 AI 教程
-> LLM Architectures · Agent Systems · Reinforcement Learning & Inference
-> 大模型架构 · 智能体系统 · 强化学习与推理新范式
+> LLM Architectures · Agent Systems · RL & Inference · Mathematical Foundations
+> 大模型架构 · 智能体系统 · 强化学习与推理 · 数学基础
 
 ---
 
 ## 🇬🇧 English Tutorials
 
-| # | Topic | Difficulty | Visual |
-|:--|:------|:----------:|:------:|
-| 01 | [GRPO — Group Relative Policy Optimization](tutorials/en/01-grpo.md) | Advanced | 🎬 GIF |
-| 02 | [MoE — Mixture of Experts](tutorials/en/02-mixture-of-experts.md) | Advanced | 🎬 GIF |
-| 03 | [Speculative Decoding](tutorials/en/03-speculative-decoding.md) | Advanced | 🎬 GIF |
-| 04 | [Test-Time Compute Scaling](tutorials/en/04-test-time-compute.md) | Advanced | 🎬 GIF |
-| 05 | [Multi-Agent Reflection](tutorials/en/05-multi-agent-reflection.md) | Advanced | 🎬 GIF |
-| 06 | [Quantization — TurboQuant & 1-bit LLMs](tutorials/en/06-quantization.md) | Advanced | 🖼️ PNG |
-| 07 | [RBF Attention](tutorials/en/07-rbf-attention.md) | Advanced | 🖼️ PNG |
-| 08 | [Memory & KV Cache](tutorials/en/08-memory-kv-cache.md) | Advanced | 🖼️ PNG |
+| # | Topic | Category | Time | Visual |
+|:--|:------|:---------|:----:|:------:|
+| 01 | [GRPO — Group Relative Policy Optimization](tutorials/en/01-grpo.md) | RL | ~15 min | Mermaid + GIF |
+| 02 | [MoE — Mixture of Experts](tutorials/en/02-mixture-of-experts.md) | Architecture | ~20 min | Mermaid + GIF |
+| 03 | [Speculative Decoding](tutorials/en/03-speculative-decoding.md) | Inference | ~15 min | Mermaid + GIF |
+| 04 | [Test-Time Compute Scaling](tutorials/en/04-test-time-compute.md) | Inference | ~20 min | Mermaid + GIF |
+| 05 | [Multi-Agent Reflection](tutorials/en/05-multi-agent-reflection.md) | Agent | ~20 min | Mermaid + GIF |
+| 06 | [Quantization — TurboQuant & 1-bit LLMs](tutorials/en/06-quantization.md) | Inference | ~15 min | Mermaid + PNG |
+| 07 | [RBF Attention](tutorials/en/07-rbf-attention.md) | Architecture | ~15 min | Mermaid + PNG |
+| 08 | [Memory & KV Cache](tutorials/en/08-memory-kv-cache.md) | Inference | ~20 min | Mermaid + PNG |
 
 ## 🇨🇳 中文教程
 
-| # | 主题 | 难度 | 图示 |
-|:--|:-----|:----:|:----:|
-| 01 | [GRPO — 组相对策略优化](tutorials/zh/01-grpo.md) | 进阶 | 🎬 GIF |
-| 02 | [MoE — 混合专家架构](tutorials/zh/02-mixture-of-experts.md) | 进阶 | 🎬 GIF |
-| 03 | [投机解码](tutorials/zh/03-speculative-decoding.md) | 进阶 | 🎬 GIF |
-| 04 | [推理时计算扩展](tutorials/zh/04-test-time-compute.md) | 进阶 | 🎬 GIF |
-| 05 | [多智能体反思系统](tutorials/zh/05-multi-agent-reflection.md) | 进阶 | 🎬 GIF |
-| 06 | [模型量化 — TurboQuant 与 1-bit 大模型](tutorials/zh/06-quantization.md) | 进阶 | 🖼️ PNG |
-| 07 | [RBF 注意力 — 超越点积](tutorials/zh/07-rbf-attention.md) | 进阶 | 🖼️ PNG |
-| 08 | [记忆机制与 KV Cache 优化](tutorials/zh/08-memory-kv-cache.md) | 进阶 | 🖼️ PNG |
+| # | 主题 | 分类 | 时间 | 图示 |
+|:--|:-----|:-----|:----:|:----:|
+| 01 | [GRPO — 组相对策略优化](tutorials/zh/01-grpo.md) | 强化学习 | ~15 min | Mermaid + GIF |
+| 02 | [MoE — 混合专家架构](tutorials/zh/02-mixture-of-experts.md) | 模型架构 | ~20 min | Mermaid + GIF |
+| 03 | [投机解码](tutorials/zh/03-speculative-decoding.md) | 推理优化 | ~15 min | Mermaid + GIF |
+| 04 | [推理时计算扩展](tutorials/zh/04-test-time-compute.md) | 推理优化 | ~20 min | Mermaid + GIF |
+| 05 | [多智能体反思系统](tutorials/zh/05-multi-agent-reflection.md) | 智能体 | ~20 min | Mermaid + GIF |
+| 06 | [模型量化 — TurboQuant 与 1-bit 大模型](tutorials/zh/06-quantization.md) | 推理优化 | ~15 min | Mermaid + PNG |
+| 07 | [RBF 注意力 — 超越点积](tutorials/zh/07-rbf-attention.md) | 模型架构 | ~15 min | Mermaid + PNG |
+| 08 | [记忆机制与 KV Cache 优化](tutorials/zh/08-memory-kv-cache.md) | 推理优化 | ~20 min | Mermaid + PNG |
+
+---
+
+## What's Inside Each Tutorial | 每篇教程包含
+
+Every tutorial (EN + ZH) includes:
+
+- **YAML Frontmatter**: metadata, tags, prerequisites, reading time
+- **Quick Reference**: core formula + one-liner code at a glance
+- **Mermaid Diagrams**: interactive architecture flowcharts (rendered by GitHub)
+- **LaTeX Math**: $$ equation blocks with term-by-term explanation
+- **Runnable Python**: complete, typed code with `__main__` examples
+- **Common Misconceptions**: what people get wrong about this concept
+- **Exercises**: hands-on problems with collapsible answers
+- **Verified References**: only real arXiv papers, no fabricated links
 
 ---
 
 ## Project Structure
 
 ```
-tutorials/
-├── en/         # Pure English tutorials
-│   ├── 01-grpo.md
-│   ├── 02-mixture-of-experts.md
-│   └── ...
-└── zh/         # Pure Chinese tutorials (same topics)
-    ├── 01-grpo.md
-    ├── 02-mixture-of-experts.md
-    └── ...
-
-gifs/           # Animated GIFs (GitHub-native)
-diagrams/       # Architecture diagrams (PNG)
+advanced-ai-daily/
+├── tutorials/
+│   ├── en/               # Pure English tutorials (v4.0 format)
+│   └── zh/               # Pure Chinese tutorials (v4.0 format)
+├── gifs/                 # Animated GIFs (GitHub-native)
+├── diagrams/             # Architecture diagrams (PNG fallback)
+└── references/
+    ├── verified-papers.json       # 25 verified arXiv papers
+    └── keyword-database.json      # Topic coverage tracking
 ```
 
 ## Design Principles
 
 - **Language Separation**: No mixed-language paragraphs. Each tutorial is 100% one language.
 - **Depth First**: No ML 101. Straight to the frontier.
-- **Visual First**: Every concept has a GIF or architecture diagram.
-- **Code Included**: Working Python with comments in the tutorial's language.
+- **Visual First**: Every concept has Mermaid diagrams + GIF or PNG.
+- **Code Included**: Complete, runnable Python with type hints.
+- **Verified References**: Only real, confirmed arXiv papers — never fabricated.
 - **Community-Driven**: Sourced from arXiv + Reddit (r/LocalLLaMA, r/MachineLearning, etc.).
 
 ## Quick Start
 
-1. Pick a language above
-2. Read a tutorial with code examples
-3. Open the GIF/PNG for a visual overview
-4. Say "更新教程" to me for a new daily tutorial
+1. Pick a language and topic above
+2. Open the tutorial — Quick Reference at top gives you the formula in 30s
+3. Read the full Deep Dive section with code examples
+4. Try the exercises at the bottom (answers are collapsible)
+5. Say **"更新教程"** or **"今天更新什么"** to get a new daily tutorial
 
 ## Contributing
 
@@ -72,5 +86,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
-_Licensed under MIT | [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_Last updated: 2026-04-03 | 8 tutorials × 2 languages = 16 files_
+_Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
+_16 tutorial files · 8 topics × 2 languages · 7,900+ lines of content · v4.0 format_
