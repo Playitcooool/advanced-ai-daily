@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多智能体反思动画</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a1a; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+  h1 { text-align: center; color: #7eb8ff; margin-bottom: 10px; font-size: 1.8em; }
+  .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.9em; }
+  
+  .stage { max-width: 900px; margin: 0 auto; }
+  
+  /* Evolution */
+  .evolution { margin: 20px 0; }
+  .evolution h3 { text-align: center; color: #7eb8ff; margin-bottom: 15px; }
+  .evo-steps { display: flex; flex-direction: column; gap: 12px; max-width: 700px; margin: 0 auto; }
+  .evo-step {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    background: #1a1a3a; border-radius: 10px;
+    opacity: 0; animation: evo-appear 0.5s ease-out forwards;
+  }
+  .evo-step:nth-child(1) { animation-delay: 0.3s; }
+  .evo-step:nth-child(2) { animation-delay: 0.8s; }
+  .evo-step:nth-child(3) { animation-delay: 1.3s; }
+  .evo-step:nth-child(4) { animation-delay: 1.8s; }
+  .evo-step:nth-child(5) { animation-delay: 2.3s; }
+  @keyframes evo-appear { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+  .evo-icon {
+    width: 48px; text-align: center; font-size: 1.5em; flex-shrink: 0;
+  }
+  .evo-text h4 { color: #7eb8ff; font-size: 0.9em; margin-bottom: 3px; }
+  .evo-text p { color: #999; font-size: 0.8em; line-height: 1.4; }
+  
+  /* Agent architecture */
+  .arch-section { margin: 30px 0; }
+  .arch-section h3 { text-align: center; color: #7eb8ff; margin-bottom: 20px; }
+  
+  .agent-diagram {
+    max-width: 700px; margin: 0 auto;
+    position: relative; min-height: 350px;
+  }
+  
+  .agent {
+    position: absolute; border-radius: 12px;
+    padding: 14px; text-align: center;
+    opacity: 0; animation: agent-appear 0.6s ease-out forwards;
+  }
+  .agent h4 { font-size: 0.9em; margin-bottom: 6px; }
+  .agent p { font-size: 0.75em; color: #aaa; line-height: 1.4; }
+  
+  .agent-planner {
+    background: linear-gradient(135deg, #1a2a4a, #2a3a5a);
+    border: 2px solid #4a7aff;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 180px;
+    animation-delay: 0.5s;
+  }
+  .agent-planner h4 { color: #7eaaff; }
+  
+  .agent-exec {
+    background: linear-gradient(135deg, #1a3a2a, #2a4a3a);
+    border: 2px solid #4aff7a;
+    top: 100px; left: 50%; transform: translateX(-50%);
+    width: 180px;
+    animation-delay: 1s;
+  }
+  .agent-exec h4 { color: #7affa0; }
+  .exec-parallels { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .exec-mini {
+    background: #2a4a3a; border: 1px solid #3a6a4a;
+    border-radius: 4px; padding: 4px 8px; font-size: 0.7em;
+    color: #aaa;
+  }
+  
+  .agent-verifier {
+    background: linear-gradient(135deg, #3a1a2a, #4a2a3a);
+    border: 2px solid #ff4a6a;
+    top: 200px; left: 50%; transform: translateX(-50%);
+    width: 180px;
+    animation-delay: 1.5s;
+  }
+  .agent-verifier h4 { color: #ff7e8f; }
+  
+  /* Arrows between agents */
+  .arrows-svg {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  
+  /* Flow animation */
+  .flow-arrow {
+    stroke-dasharray: 8, 4;
+    animation: flow-dash 1s linear infinite;
+  }
+  @keyframes flow-dash {
+    to { stroke-dashoffset: -12; }
+  }
+  
+  .flow-step-list { margin: 20px auto; max-width: 650px; }
+  .flow-step-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 14px; margin-bottom: 8px;
+    background: #1a1a2e; border-radius: 8px;
+    opacity: 0; animation: fsi-appear 0.5s ease-out forwards;
+  }
+  .flow-step-item:nth-child(1) { animation-delay: 2s; }
+  .flow-step-item:nth-child(2) { animation-delay: 2.5s; }
+  .flow-step-item:nth-child(3) { animation-delay: 3s; }
+  .flow-step-item:nth-child(4) { animation-delay: 3.5s; }
+  .flow-step-item:nth-child(5) { animation-delay: 4s; }
+  @keyframes fsi-appear { from { opacity: 0; } to { opacity: 1; } }
+  .fsi-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75em; font-weight: bold; flex-shrink: 0;
+  }
+  .fsi-num.blue { background: #4a7aff; color: #fff; }
+  .fsi-num.green { background: #4aff7a; color: #0a0a1a; }
+  .fsi-num.red { background: #ff4a6a; color: #fff; }
+  .fsi-text { font-size: 0.85em; color: #ccc; line-height: 1.4; }
+  
+  .insight {
+    background: linear-gradient(135deg, #2a1a2a, #3a2a3a);
+    border: 2px solid #8a4a8a;
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin: 20px auto;
+    max-width: 650px;
+    text-align: center;
+    opacity: 0; animation: insight-appear 0.8s 4.5s ease-out forwards;
+  }
+  @keyframes insight-appear { from { opacity: 0; } to { opacity: 1; } }
+  .insight h3 { color: #c77ec7; margin-bottom: 10px; }
+  .insight p { color: #ddd; font-size: 0.9em; line-height: 1.6; }
+  .insight strong { color: #e0a0e0; }
+</style>
+</head>
+<body>
+
+<h1>Multi-Agent Reflection 多智能体反思</h1>
+<p class="subtitle">多个 LLM 扮演不同角色，通过 "生成 → 反馈 → 修正" 循环提升输出质量</p>
+
+<div class="stage">
+  
+  <div class="evolution">
+    <h3>从单模型到多智能体的进化</h3>
+    <div class="evo-steps">
+      <div class="evo-step">
+        <div class="evo-icon">🤖</div>
+        <div class="evo-text">
+          <h4>v1: 单次生成</h4>
+          <p>Prompt → LLM → Response。最简单但质量不可控。</p>
+        </div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-icon">🔄</div>
+        <div class="evo-text">
+          <h4>v2: 自我反思 (Reflexion)</h4>
+          <p>单体 LLM 自己检查自己。但 LLM 倾向于 "和稀泥" -- 很难严格批评自己的输出。</p>
+        </div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-icon">⚙️</div>
+        <div class="evo-text">
+          <h4>v3: 两阶段流水线</h4>
+          <p>Generator 生成 → Critic 批评 → Refiner 修正。角色分离，批评更客观。</p>
+        </div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-icon">🏗️</div>
+        <div class="evo-text">
+          <h4>v4: PEV 架构 (规划-执行-验证)</h4>
+          <p>拆分子任务并行执行，每个经过独立验证。最接近人类解决问题的方式。</p>
+        </div>
+      </div>
+      <div class="evo-step">
+        <div class="evo-icon">⚔️</div>
+        <div class="evo-text">
+          <h4>v5: 辩论 / 委员会</h4>
+          <p>多个 Expert 并行生成，Judge 聚合。强制探索对立观点，消除幻觉。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="arch-section">
+    <h3>PEV 架构 (Planner → Executor → Verifier)</h3>
+    <div class="agent-diagram">
+      <svg class="arrows-svg" viewBox="0 0 700 350">
+        <!-- Planner to Executor -->
+        <line x1="350" y1="55" x2="350" y2="100" stroke="#4a7aff" stroke-width="2" class="flow-arrow"/>
+        <polygon points="350,105 345,95 355,95" fill="#4a7aff"/>
+        
+        <!-- Executor to Verifier -->
+        <line x1="350" y1="170" x2="350" y2="200" stroke="#4aff7a" stroke-width="2" class="flow-arrow"/>
+        <polygon points="350,205 345,195 355,195" fill="#4aff7a"/>
+        
+        <!-- Verifier back to Planner (retry loop) -->
+        <path d="M 430 220 Q 500 200, 500 30 Q 500 5, 360 5" fill="none" stroke="#ff4a6a" stroke-width="1.5" stroke-dasharray="6,4" class="flow-arrow"/>
+        
+        <!-- Labels -->
+        <text x="365" y="85" fill="#4a7aff" font-size="10">规划分解</text>
+        <text x="365" y="189" fill="#4aff7a" font-size="10">执行结果</text>
+        <text x="505" y="120" fill="#ff4a6a" font-size="10">不通过 → 重试</text>
+      </svg>
+      
+      <div class="agent agent-planner">
+        <h4>🧠 Planner</h4>
+        <p>分析问题，拆解为独立子任务，最终汇总</p>
+      </div>
+      <div class="agent agent-exec">
+        <h4>⚡ Executor</h4>
+        <p>执行各个子任务</p>
+        <div class="exec-parallels">
+          <div class="exec-mini">Task A</div>
+          <div class="exec-mini">Task B</div>
+          <div class="exec-mini">Task C</div>
+        </div>
+      </div>
+      <div class="agent agent-verifier">
+        <h4>✅ Verifier</h4>
+        <p>检查每个子任务输出，不通过则要求重做</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="flow-step-list">
+    <div class="flow-step-item">
+      <div class="fsi-num blue">1</div>
+      <div class="fsi-text"><strong style="color:#4a7aff;">Planner</strong> 收到问题："写一个 Python 爬虫抓取天气数据并分析趋势" → 拆解为: (1) 网页抓取, (2) 数据清洗, (3) 统计分析和可视化</div>
+    </div>
+    <div class="flow-step-item">
+      <div class="fsi-num green">2</div>
+      <div class="fsi-text"><strong style="color:#4aff7a;">Executor</strong> 并行执行三个子任务，各自生成代码</div>
+    </div>
+    <div class="flow-step-item">
+      <div class="fsi-num red">3</div>
+      <div class="fsi-text"><strong style="color:#ff4a6a;">Verifier</strong> 用测试用例验证: Task A (抓取) 通过, Task B (清洗) 通过, Task C (分析) 发现除零错误 → 不通过</div>
+    </div>
+    <div class="flow-step-item">
+      <div class="fsi-num green">4</div>
+      <div class="fsi-text"><strong style="color:#4aff7a;">Executor</strong> 收到 Task C 的反馈，修正代码处理边界情况</div>
+    </div>
+    <div class="flow-step-item">
+      <div class="fsi-num blue">5</div>
+      <div class="fsi-text"><strong style="color:#4a7aff;">Planner</strong> 汇总所有通过的子任务，生成最终完整解决方案</div>
+    </div>
+  </div>
+  
+  <div class="insight">
+    <h3>关键洞察</h3>
+    <p>多 Agent 不是简单的 "多跑几次"。核心价值在于 <strong>角色分离产生信息多样性</strong>: 不同的 Prompt 触发不同的思维路径，Critic/Verifier 消除了单体 LLM "和稀泥" 和 "自欺" 的倾向。</p>
+  </div>
+</div>
+
+</body>
+</html>

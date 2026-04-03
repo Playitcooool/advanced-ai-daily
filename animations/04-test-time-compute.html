@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推理时计算扩展动画</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a1a; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+  h1 { text-align: center; color: #7eb8ff; margin-bottom: 10px; font-size: 1.8em; }
+  .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.9em; }
+  
+  .stage { max-width: 900px; margin: 0 auto; }
+  
+  .scaling-graph {
+    display: flex; gap: 30px; justify-content: center; margin: 20px 0; flex-wrap: wrap;
+  }
+  .scaling-box {
+    background: #1a1a3a; border-radius: 12px; padding: 20px;
+    width: 400px; text-align: center;
+  }
+  .scaling-box h3 { margin-bottom: 12px; }
+  
+  /* Training scaling */
+  .train-box { border: 2px solid #ff6b6b; }
+  .train-box h3 { color: #ff6b6b; }
+  .svg-container svg { width: 100%; }
+  
+  /* Test scaling */
+  .test-box { border: 2px solid #4ecdc4; }
+  .test-box h3 { color: #4ecdc4; }
+  
+  /* Methods */
+  .methods { margin: 30px 0; }
+  .methods h3 { text-align: center; color: #7eb8ff; margin-bottom: 20px; font-size: 1.3em; }
+  
+  .method-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+  .method-card {
+    background: #1a1a3a; border-radius: 10px; padding: 16px;
+    opacity: 0; animation: card-fade 0.6s ease-out forwards;
+  }
+  .method-card:nth-child(1) { animation-delay: 0.2s; border-left: 3px solid #4caf50; }
+  .method-card:nth-child(2) { animation-delay: 0.4s; border-left: 3px solid #ff9800; }
+  .method-card:nth-child(3) { animation-delay: 0.6s; border-left: 3px solid #9c27b0; }
+  .method-card:nth-child(4) { animation-delay: 0.8s; border-left: 3px solid #f44336; }
+  @keyframes card-fade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .method-card h4 { margin-bottom: 8px; font-size: 1em; }
+  .method-card:nth-child(1) h4 { color: #7cc77c; }
+  .method-card:nth-child(2) h4 { color: #ffb74d; }
+  .method-card:nth-child(3) h4 { color: #ce93d8; }
+  .method-card:nth-child(4) h4 { color: #ef9a9a; }
+  .method-card p { font-size: 0.85em; color: #aaa; line-height: 1.5; }
+  .method-card .perf { font-size: 0.8em; color: #666; margin-top: 6px; font-style: italic; }
+  
+  /* Animated bars for scaling */
+  .perf-bars { margin: 25px auto; max-width: 500px; }
+  .perf-bars h4 { color: #7eb8ff; text-align: center; margin-bottom: 12px; }
+  .perf-row { margin-bottom: 10px; }
+  .perf-label { font-size: 0.85em; color: #aaa; display: flex; justify-content: space-between; }
+  .perf-bar-bg { background: #1a1a2e; border-radius: 4px; height: 20px; overflow: hidden; margin-top: 3px; }
+  .perf-bar-fill {
+    height: 100%; border-radius: 4px;
+    width: 0; transition: width 1.5s ease-out;
+    display: flex; align-items: center; padding-left: 8px;
+    font-size: 0.75em; color: #fff; font-weight: bold;
+  }
+  
+  .insight {
+    background: linear-gradient(135deg, #2a1a2a, #3a2a3a);
+    border: 2px solid #8a4a8a;
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin: 20px auto;
+    max-width: 650px;
+    text-align: center;
+    opacity: 0; animation: insight-appear 0.8s 1.5s ease-out forwards;
+  }
+  @keyframes insight-appear { from { opacity: 0; } to { opacity: 1; } }
+  .insight h3 { color: #c77ec7; margin-bottom: 10px; }
+  .insight p { color: #ddd; font-size: 0.9em; line-height: 1.6; }
+  .insight strong { color: #e0a0e0; }
+</style>
+</head>
+<body>
+
+<h1>Test-Time Compute 推理时计算扩展</h1>
+<p class="subtitle">同样的模型，给它更多思考时间，性能显著提升</p>
+
+<div class="stage">
+  <div class="scaling-graph">
+    <div class="scaling-box train-box">
+      <h3>训练时扩展</h3>
+      <p style="color:#aaa;font-size:0.85em;margin-bottom:15px;">更多的数据 + 参数 + FLOPs</p>
+      <svg viewBox="0 0 300 150">
+        <line x1="30" y1="120" x2="280" y2="120" stroke="#3a3a5a" stroke-width="1"/>
+        <line x1="30" y1="120" x2="30" y2="20" stroke="#3a3a5a" stroke-width="1"/>
+        <text x="150" y="145" fill="#888" font-size="10" text-anchor="middle">Training FLOPs →</text>
+        <text x="15" y="70" fill="#888" font-size="10" transform="rotate(-90,15,70)">性能 →</text>
+        <!-- Diminishing return curve -->
+        <path d="M 40 110 Q 80 80, 130 55 Q 180 38, 230 30 Q 260 27, 280 25" 
+              fill="none" stroke="#ff6b6b" stroke-width="2"/>
+        <text x="250" y="50" fill="#ff6b6b" font-size="9">边际效益递减</text>
+      </svg>
+    </div>
+    
+    <div class="scaling-box test-box">
+      <h3>推理时扩展</h3>
+      <p style="color:#aaa;font-size:0.85em;margin-bottom:15px;">更多的采样 + 思考 + 搜索</p>
+      <svg viewBox="0 0 300 150">
+        <line x1="30" y1="120" x2="280" y2="120" stroke="#3a3a5a" stroke-width="1"/>
+        <line x1="30" y1="120" x2="30" y2="20" stroke="#3a3a5a" stroke-width="1"/>
+        <text x="150" y="145" fill="#888" font-size="10" text-anchor="middle">推理 Token 预算 →</text>
+        <text x="15" y="70" fill="#888" font-size="10" transform="rotate(-90,15,70)">难题正确率 →</text>
+        <!-- Scaling curve -->
+        <path d="M 40 110 Q 80 90, 130 70 Q 180 55, 230 45 Q 260 40, 280 37" 
+              fill="none" stroke="#4ecdc4" stroke-width="2"/>
+        <text x="240" y="35" fill="#4ecdc4" font-size="9">OpenAI o1 / R1</text>
+      </svg>
+    </div>
+  </div>
+  
+  <div class="methods">
+    <h3>四种核心方法</h3>
+    <div class="method-grid">
+      <div class="method-card">
+        <h4>Best-of-N</h4>
+        <p>生成 N 个答案，用奖励函数选最好的。N 越大找到好答案概率越高，但边际效益递减。</p>
+        <div class="perf">N=1→N=100: 30% 提升到 55%+ 正确率</div>
+      </div>
+      <div class="method-card">
+        <h4>Self-Correction</h4>
+        <p>模型自己检查、批评、修正答案。需要可靠的自评估 Prompt。知识缺失时无效。</p>
+        <div class="perf">适合: 模型知道答案但不确定性高的情况</div>
+      </div>
+      <div class="method-card">
+        <h4>Tree of Thoughts</h4>
+        <p>结构化思维搜索: 分支 K 个 → 评估 → 保留 Top-B → 继续。比线性 CoT 探索更多推理路径。</p>
+        <div class="perf">Beam Size=3, Depth=4 效果显著</div>
+      </div>
+      <div class="method-card">
+        <h4>Verifier-Guided</h4>
+        <p>大量采样 + 代码执行器验证。AlphaCode 方法。只要有客观验证器，效果最好。</p>
+        <div class="perf">128 个候选: 编程竞赛 Codeforces 前 50%</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="perf-bars">
+    <h4>推理预算 vs 难题正确率 (示意)</h4>
+    <div class="perf-row">
+      <div class="perf-label"><span>标准生成 (1x)</span><span>30%</span></div>
+      <div class="perf-bar-bg"><div class="perf-bar-fill" style="background:#4a6fa5;width:30%;" id="pb1">30%</div></div>
+    </div>
+    <div class="perf-row">
+      <div class="perf-label"><span>CoT (思维链)</span><span>40%</span></div>
+      <div class="perf-bar-bg"><div class="perf-bar-fill" style="background:#5a7fb5;width:40%;" id="pb2">40%</div></div>
+    </div>
+    <div class="perf-row">
+      <div class="perf-label"><span>Best-of-64</span><span>50%</span></div>
+      <div class="perf-bar-bg"><div class="perf-bar-fill" style="background:#6a8fc5;width:50%;" id="pb3">50%</div></div>
+    </div>
+    <div class="perf-row">
+      <div class="perf-label"><span>CoT + 搜索</span><span>60%</span></div>
+      <div class="perf-bar-bg"><div class="perf-bar-fill" style="background:#4ecdc4;width:60%;" id="pb4">60%</div></div>
+    </div>
+    <div class="perf-row">
+      <div class="perf-label"><span>MCTS 深度搜索</span><span>72%</span></div>
+      <div class="perf-bar-bg"><div class="perf-bar-fill" style="background:#45b7aa;width:72%;" id="pb5">72%</div></div>
+    </div>
+  </div>
+  
+  <div class="insight">
+    <h3>关键洞察</h3>
+    <p>训练时扩展和推理时扩展是<strong>两条互补的 Scaling Law</strong>。未来模型 = 更好的基础 + 更多的推理预算。OpenAI o1 和 DeepSeek-R1 本质上都是训练模型在推理时 "花更多时间思考"。</p>
+  </div>
+</div>
+
+<script>
+setTimeout(() => {
+  // Already have inline widths set
+}, 2000);
+</script>
+
+</body>
+</html>
