@@ -1,443 +1,660 @@
-# Day 04: Test-Time Compute / Inference-Time Scaling
-
-## Table of Contents
-
-- Overview
-- Why Test-Time Compute Matters
-- Strategy 1: Best-of-N Sampling
-- Strategy 2: Self-Correction / Reflexion
-- Strategy 3: Tree of Thoughts (ToT)
-- Strategy 4: Verifier-Guided Decoding
-- Comparison Table
-- Code Examples
-- ASCII Flowcharts
-- Further Reading
-- Exercises
-
+---
+date: "2026-04-03"
+difficulty: "Advanced"
+category: "Inference Strategy"
 ---
 
-## Overview
+# Day 04: Test-Time Compute Scaling -- More Inference Budget, Better Output
 
-**Test-time compute** (also called **inference-time scaling**) refers to the strategy of spending additional computation during the *generation* phase — rather than during training — to improve the quality of a language model's output. Instead of relying solely on a single forward pass, we allocate extra compute to sample multiple answers, critique and refine them, search over solution spaces, or use learned verifiers to guide generation.
+> **Watch the animation**: ![Test-Time Compute Animation](../gifs/04-test-time-compute.gif)
 
-**Key insight:** More training is expensive and often has diminishing returns. More compute at test time is flexible, task-specific, and often yields dramatic improvements on reasoning tasks.
+## Quick Reference
 
----
+| Term | Definition |
+|---|---|
+| Best-of-N | Generate N independent responses, score each, pick highest |
+| Self-Correction / Reflexion | Generate, critique, revise -- iterative refinement loop |
+| Tree of Thoughts (ToT) | Systematically search over a tree of possible reasoning paths |
+| Verifier-Guided Decode | Use a trained reward/verifier model to score and guide generation |
+| Process Reward | Score intermediate reasoning steps, not just final answer (PRM) |
+| Outcome Reward | Score only the final answer / complete solution (ORM) |
 
-## Why Test-Time Compute Matters
+## One-Line Summary
 
-| Dimension | Pre-Training | Fine-Tuning | Test-Time Compute |
-|-----------|-------------|-------------|--------------------|
-| Cost | Extremely high | High | Scales with each query |
-| Flexibility | Fixed weights | Fixed per task | Adjustable per query |
-| Reasoning gains | General | Domain-specific | Task-specific |
-| Key techniques | Scale data/model | SFT, DPO | Best-of-N, ToT, Reflexion |
-| Latency impact | None | None | Higher (trade-off) |
+Test-time compute scaling allocates additional inference budget to a **fixed model** to produce higher quality outputs through strategies like Best-of-N sampling, self-correction loops, tree-structured reasoning search, and verifier-guided decoding -- trading latency for quality.
 
-**Why it works:** Language models are not just text generators — they are probabilistic reasoners. By spending more compute at test time, we can:
+## Why This Matters
 
-1. **Sample diversity:** Generate multiple candidate solutions and pick the best.
-2. **Deliberation:** Let the model "think longer" by chaining reasoning steps.
-3. **Verification:** Use a separate process to evaluate and rank outputs.
-4. **Search:** Explore trees or graphs of possible reasoning paths.
+Traditional scaling laws focus on more data, more parameters, or more training compute. **Test-time compute scaling** opens a new dimension: spending extra compute at inference time to improve quality. This matters because:
 
----
+1. It works with any pre-trained model -- no retraining needed
+2. The compute budget is adjustable per-query, not fixed during training
+3. Gains scale dramatically with well-designed strategies (especially on reasoning tasks)
+4. It unlocks new capability tiers (e.g., a 7B model with test-time compute can outperform a raw 70B model on some tasks)
+5. The trade-off is explicit and controllable: you choose latency vs. quality
 
-## Strategy 1: Best-of-N Sampling
+## Architecture
 
-The simplest—and most widely used—test-time compute strategy.
+```mermaid
+flowchart TD
+    subgraph Strategy Selection
+        Prompt["User Prompt / Problem"]
+    end
 
-### How It Works
+    Prompt --> BestOfN["Strategy 1: Best-of-N\n\n1. Generate N independent responses\n2. Score each with reward model\n3. Select max-scoring response"]
+    Prompt --> Reflexion["Strategy 2: Reflexion\n\n1. Generate initial answer\n2. Self-critique / reflect\n3. Revise based on critique\n4. Repeat up to K rounds"]
+    Prompt --> ToT["Strategy 3: Tree of Thoughts\n\n1. Decompose problem into steps\n2. Generate K candidates per step\n3. Evaluate and prune\n4. BFS/DFS/Beam search tree"]
+    Prompt --> Verifier["Strategy 4: Verifier-Guided\n\n1. Train verifier on correct/incorrect labels\n2. Score candidates at each step or output\n3. Re-rank and select best"]
 
-1. Given a prompt, generate N independent responses (often with higher temperature).
-2. Score each response using a reward model, verifier, or heuristic.
-3. Select the highest-scoring response as the final output.
+    BestOfN --> Output["Higher Quality Output\n(same model, more compute)"]
+    Reflexion --> Output
+    ToT --> Output
+    Verifier --> Output
 
-### ASCII Flowchart
-
-```
-        ┌─────────────┐
-        │   Prompt    │
-        └──────┬──────┘
-               │
-        ┌──────▼──────┐
-        │  Sample N x │  (temperature > 0)
-        │  Responses  │
-        └──────┬──────┘
-               │
-        ┌──────▼──────┐
-        │  Score Each │  (reward model / verifier)
-        └──────┬──────┘
-               │
-        ┌──────▼──────┐
-        │  Select Max │
-        └──────┬──────┘
-               │
-        ┌──────▼──────┐
-        │   Output    │
-        └─────────────┘
+    style BestOfN fill:#e1f5e1
+    style Reflexion fill:#fff3cd
+    style ToT fill:#e1f5e1
+    style Verifier fill:#ffe1e1
+    style Output fill:#d1ecf1
 ```
 
-### Mathematical Intuition
+## The Math
 
-Given a language model P and a reward model R:
+### Best-of-N: Probabilistic Scaling
 
-```
-output = argmax_{y_i ~ P(y|x)} R(y_i, x) for i = 1..N
-```
+Given a generator $P_\theta$ and a reward function $R$, we sample $N$ independent responses $y_1, ..., y_N \sim P_\theta(y | x)$ and select:
 
-As N increases, the probability of finding a high-reward output increases. However, **diminishing returns** apply — after a certain N, additional samples rarely improve quality significantly.
+$$y^* = \arg\max_{i \in \{1,...,N\}} R(y_i, x)$$
 
-### Practical Tips
+The probability that the maximum reward exceeds a threshold $\tau$ is:
 
-- Use **temperature 0.7–1.0** to encourage diversity.
-- N = 5–25 is practical for most applications.
-- Beyond N=64, marginal gains shrink rapidly.
-- A reward model can be anything from a simple regex checker to a trained preference model.
+$$P\left(\max_i R(y_i, x) > \tau\right) = 1 - F_R(\tau)^N$$
 
----
+where $F_R$ is the CDF of the reward distribution. As $N$ increases, this probability approaches 1. However, **diminishing returns** apply:
 
-## Strategy 2: Self-Correction / Reflexion
+$$\frac{\partial}{\partial N} P = -F_R(\tau)^N \log F_R(\tau)$$
 
-Instead of sampling independently, the model generates a draft, critiques it, and refines it — mimicking the human process of writing and editing.
+The marginal gain decays exponentially, explaining why doubling beyond $N \approx 32$-64 yields minimal improvement on most benchmarks.
 
-### How It Works
+### Self-Correction: Iterative Improvement
 
-1. **Generate:** Produce an initial answer.
-2. **Reflect:** Have the same (or another) model critique the answer — identify errors, gaps, or improvements.
-3. **Revise:** Generate an improved answer based on the critique.
-4. Optionally repeat steps 2–3 for multiple rounds.
+In the reflexion loop, let $f_\theta$ denote the model generating answers and $f_\theta^{\text{critic}}$ denote the critique function (which may be the same model with different prompting). After $k$ rounds:
 
-### ASCII Flowchart
+$$y^{(k+1)} = f_\theta\left(x, y^{(k)}, f_\theta^{\text{critic}}(x, y^{(k)})\right)$$
 
-```
-  ┌─────────────────────────────┐
-  │           Prompt            │
-  └──────────────┬──────────────┘
-                 │
-       ┌─────────▼──────────┐
-       │   Generate Draft   │
-       └─────────┬──────────┘
-                 │
-       ┌─────────▼──────────┐
-       │  Self-Reflection:  │
-       │  "What's wrong?"   │
-       └─────────┬──────────┘
-                 │
-       ┌─────────▼──────────┐
-       │       Error?       │────No──►  Final Output
-       └─────────┬──────────┘
-                Yes
-       ┌─────────▼──────────┐
-       │   Revise Answer    │
-       └─────────┬──────────┘
-                 │  (loop back, max K rounds)
-                 │
-        ┌────────┴────────┐
-        ▼                 │
-  (back to Reflect)       │
-```
+The quality improvement at step $k$ is bounded:
 
-### Key Variants
+$$Q(y^{(k+1)}) - Q(y^{(k)}) \to 0 \quad \text{as} \quad k \to \infty$$
 
-| Variant | Description | Pros | Cons |
-|---------|-------------|------|------|
-| Single-pass reflection | One critique, one revision | Fast, simple | Limited improvement |
-| Multi-round Reflexion | Iterate K times | Deeper correction | Higher compute cost |
-| External critic | Use a stronger model as critic | Better critique | API cost, latency |
-| Reflection tokens | Train special reflection tokens | Integrated, efficient | Requires fine-tuning |
+The model can only improve as much as its own critique capability allows. If the model cannot detect its errors, self-correction converges to the same fixed point or, worse, reinforces model biases.
 
-### Common Prompt Pattern
+### Tree of Thoughts: Search Over Reasoning Paths
 
-```
-You are a careful problem solver.
+ToT formalizes reasoning as a tree search problem. At each depth $d$, we maintain a beam of $B$ candidate states $\{s_d^{(1)}, ..., s_d^{(B)}\}$. The value of a state is:
 
-Step 1: Provide your best answer to the following question.
-Question: {question}
-Answer: {initial_answer}
+$$V(s_d) = \mathbb{E}[R(y) | \text{current reasoning trace } s_d]$$
 
-Step 2: Review your answer carefully. Are there any errors in reasoning, 
-calculation, or logic? Identify specific issues.
-Critique: {self_critique}
+At each expansion step, we generate $K$ candidate next thoughts per state and evaluate them:
 
-Step 3: Based on your critique, provide a revised and improved answer.
-Revised Answer: {revised_answer}
-```
+$$s_{d+1}^{(j)} = f_\theta\left(\text{prompt}(s_d^{(i)})\right), \quad j \in \{1, ..., K\}$$
 
----
+We then prune to the top-$B$ states:
 
-## Strategy 3: Tree of Thoughts (ToT)
+$$\mathcal{B}_{d+1} = \text{Top}_B\left(\bigcup_{i=1}^B \{s_{d+1}^{(i,1)}, ..., s_{d+1}^{(i,K)}\}\right)$$
 
-Tree of Thoughts extends chain-of-thought by explicitly searching over a **tree** of possible reasoning steps.
+The total search space explored has size up to $(B \times K)^D$ for depth $D$, exponentially larger than a single generation path of size $1$.
 
-### How It Works
+### Process vs Outcome Reward Models
 
-1. **Thought decomposition:** Break the problem into sequential thought steps.
-2. **Thought generation:** At each step, propose K candidate next thoughts.
-3. **State evaluation:** Score each partial solution (state) using a heuristic or learned evaluator.
-4. **Search:** Use BFS (breadth-first search) or DFS (depth-first search) to explore the most promising branches.
-5. **Backtrack:** If a branch leads to a dead end, return and explore alternatives.
+| | Outcome Reward Model (ORM) | Process Reward Model (PRM) |
+|---|---|---|
+| Scores | Final answer only | Each reasoning step |
+| Supervision needed | Answer-level labels | Step-level labels |
+| Discriminative power | Coarse | Fine-grained |
+| Compute cost | Low (one call) | High (one call per step) |
+| Error localization | Cannot pinpoint error step | Identifies where reasoning diverges |
 
-### ASCII Flowchart
+A PRM assigns a score $s_t$ to each reasoning step $t$:
 
-```
-                      Root (Problem)
-                          │
-          ┌───────────────┼───────────────┐
-          │               │               │
-      Thought 1a      Thought 1b      Thought 1c
-          │               │               │
-      ┌───┼───┐          ...             ...
-      │   │   │
-   2a  2b  2c
-   │
- ┌─┼─┐
-3a 3b 3c   ... evaluate leaf nodes, pick best path
-```
+$$s_t = V_{\text{PRM}}(x, s_1, ..., s_t)$$
 
-### Search Strategies
+The overall solution score can be aggregated as:
 
-| Strategy | How It Works | When to Use |
-|----------|-------------|-------------|
-| BFS | Explore all branches level-by-level | Need broad coverage; shallow trees |
-| DFS | Go deep on one branch first | Deep reasoning problems |
-| Beam Search | Keep only top-K states at each level | Balance exploration vs. cost |
+$$S_{\text{solution}} = \frac{1}{T} \sum_{t=1}^T s_t \quad \text{or} \quad S_{\text{solution}} = \min_{t=1}^T s_t$$
 
-### Python Skeleton
+Using the minimum is more conservative: a single bad reasoning step kills the entire solution, which aligns with how mathematical reasoning typically works (one wrong step invalidates the entire proof).
+
+### Compute-Optimal Scaling
+
+For a fixed inference compute budget $C$ (measured in forward passes), the optimal allocation balances sample count and per-sample compute:
+
+$$C = N \times (c_{\text{generate}} + c_{\text{verify}})$$
+
+where $c_{\text{generate}}$ is the cost per sample and $c_{\text{verify}}$ is the verification cost. The optimal strategy depends on the task's difficulty distribution and the model's capability ceiling.
+
+Recent work by Wu et al. (2024) shows that there exists an optimal $N_{\text{optimal}}$ for each task difficulty, and that blindly increasing $N$ wastes compute when the model's capability ceiling limits the maximum achievable quality.
+
+## Full Python Implementation
 
 ```python
+"""
+Test-Time Compute Scaling -- Inference-Time Intelligence
+Day 04 Tutorial -- Advanced AI Daily
+"""
+
+from __future__ import annotations
+from dataclasses import dataclass, field
+from typing import Callable, List, Optional, Tuple
+
+
+# ------------------------------------------------------------------
+# Strategy 1: Best-of-N Sampling
+# ------------------------------------------------------------------
+def best_of_n(
+    prompt: str,
+    generator: Callable[[str, float], str],
+    scorer: Callable[[str, str], float],
+    n: int = 10,
+    temperature: float = 0.7,
+) -> Tuple[str, float, List[Tuple[str, float]]]:
+    """
+    Generate N independent responses and select the highest-scoring one.
+
+    Args:
+        prompt: Input question or problem statement
+        generator: Callable(prompt, temperature) -> response string
+        scorer: Callable(question, answer) -> float score
+        n: Number of independent generations
+        temperature: Sampling temperature (higher = more diverse)
+
+    Returns:
+        best_answer: Highest-scoring response
+        best_score: Score of the best response
+        all_scored: List of all (response, score) pairs
+    """
+    all_scored: list[tuple[str, float]] = []
+
+    for i in range(n):
+        response = generator(prompt, temperature)
+        score = scorer(prompt, response)
+        all_scored.append((response, score))
+
+    # Sort by score descending
+    all_scored.sort(key=lambda x: x[1], reverse=True)
+    best_answer, best_score = all_scored[0]
+
+    return best_answer, best_score, all_scored
+
+
+# ------------------------------------------------------------------
+# Strategy 2: Self-Correction / Reflexion
+# ------------------------------------------------------------------
+@dataclass
+class ReflexionRound:
+    """Represents one round of the reflexion loop."""
+
+    round_number: int
+    current_answer: str
+    critique: str
+    revised_answer: str
+
+
+def reflexion_loop(
+    prompt: str,
+    generator: Callable[[str, float], str],
+    max_rounds: int = 3,
+    temperature: float = 0.7,
+) -> Tuple[str, List[ReflexionRound]]:
+    """
+    Run a reflexion loop: generate, critique, revise iteratively.
+
+    Args:
+        prompt: Input question or problem statement
+        generator: Callable(prompt, temperature) -> response string
+        max_rounds: Maximum number of critique-revise cycles
+        temperature: Sampling temperature
+
+    Returns:
+        final_answer: Answer after all reflexion rounds
+        history: List of all reflexion rounds with critiques
+    """
+    # Initial generation
+    current_answer = generator(prompt, temperature)
+    history: list[ReflexionRound] = []
+
+    for round_idx in range(1, max_rounds + 1):
+        # Self-critique
+        critique_prompt = (
+            f"Problem: {prompt}\n\n"
+            f"Your solution:\n{current_answer}\n\n"
+            f"Review this solution carefully. Identify any errors, gaps, "
+            f"or improvements. Be specific.\n\nCritique:"
+        )
+        critique = generator(critique_prompt, temperature=0.3)
+
+        # Revision based on critique
+        revision_prompt = (
+            f"Problem: {prompt}\n\n"
+            f"Your original solution:\n{current_answer}\n\n"
+            f"Your critique of the solution:\n{critique}\n\n"
+            f"Based on this critique, provide a revised and improved "
+            f"solution.\n\nRevised Solution:"
+        )
+        revised = generator(revision_prompt, temperature)
+
+        history.append(ReflexionRound(
+            round_number=round_idx,
+            current_answer=current_answer,
+            critique=critique,
+            revised_answer=revised,
+        ))
+        current_answer = revised
+
+    return current_answer, history
+
+
+# ------------------------------------------------------------------
+# Strategy 3: Tree of Thoughts
+# ------------------------------------------------------------------
+@dataclass
 class TreeNode:
-    def __init__(self, text, parent=None, evaluation=0.0):
-        self.text = text
-        self.parent = parent
-        self.children = []
-        self.evaluation = evaluation
-        self.value = None  # set for leaf nodes
+    """A node in the Tree of Thoughts reasoning tree."""
+
+    text: str
+    parent: Optional["TreeNode"] = None
+    evaluation: float = 0.0
+    children: list["TreeNode"] = field(default_factory=list)
+    depth: int = 0
+
+    def trace(self) -> str:
+        """Full reasoning trace from root to this node."""
+        if self.parent is None:
+            return self.text
+        return self.parent.trace() + "\n" + self.text
+
 
 class TreeOfThoughts:
-    def __init__(self, model, evaluator, k=5, beam_width=3, max_depth=10):
-        self.model = model      # LLM for generating thoughts
-        self.evaluator = evaluator  # function to score states
-        self.k = k              # candidates per step
+    """
+    Tree of Thoughts solver with beam search over reasoning paths.
+
+    Implements the ToT method from Yao et al. (2023) using beam search
+    to explore the most promising reasoning paths systematically.
+    """
+
+    def __init__(
+        self,
+        generator: Callable[[str, float], str],
+        evaluator: Callable[[str, str], float],
+        k: int = 5,
+        beam_width: int = 3,
+        max_depth: int = 5,
+        temperature: float = 0.7,
+    ):
+        """
+        Args:
+            generator: Callable(prompt, temperature) -> response string
+            evaluator: Callable(partial_trace, original_problem) -> float score
+            k: Number of candidate thoughts to generate per node
+            beam_width: Number of top nodes to keep at each level
+            max_depth: Maximum tree depth (number of reasoning steps)
+            temperature: Sampling temperature for generation
+        """
+        self.generator = generator
+        self.evaluator = evaluator
+        self.k = k
         self.beam_width = beam_width
         self.max_depth = max_depth
+        self.temperature = temperature
+        self.total_nodes_explored = 0
 
-    def generate_candidates(self, prompt):
-        """Generate K candidate next thoughts."""
-        responses = self.model.generate(prompt, n=self.k)
-        return responses
+    def solve(self, problem: str) -> Tuple[str, int]:
+        """
+        Run Tree of Thoughts search and return the best reasoning path.
 
-    def solve(self, problem):
+        Args:
+            problem: The problem to solve
+
+        Returns:
+            best_trace: Full reasoning trace of the best path
+            total_nodes: Total number of tree nodes explored
+        """
         root = TreeNode(text=problem)
-        beam = [root]
-        
+        beam: list[TreeNode] = [root]
+
         for depth in range(self.max_depth):
-            next_beam = []
+            next_beam: list[TreeNode] = []
+
             for node in beam:
-                candidates = self.generate_candidates(self._build_prompt(node))
-                for cand_text in candidates:
-                    child = TreeNode(text=cand_text, parent=node)
-                    child.evaluation = self.evaluator(cand_text, problem)
-                    node.children.append(child)
-                    next_beam.append(child)
-            
-            beam = sorted(next_beam, key=lambda n: n.evaluation, reverse=True)
-            beam = beam[:self.beam_width]
-        
-        # Leaf evaluation
-        best = sorted(beam, key=lambda n: n.evaluation, reverse=True)[0]
-        return self._extract_trace(best)
+                candidates = self._generate_candidates(node, problem)
+                next_beam.extend(candidates)
 
-    def _build_prompt(self, node):
-        trace = self._extract_trace(node)
-        return f"Solve: {trace}\nNext thinking step:"
+            if not next_beam:
+                break
 
-    def _extract_trace(self, node):
-        if node.parent is None:
-            return node.text
-        return self._extract_trace(node.parent) + "\n" + node.text
-```
+            # Prune to top beam_width by evaluation score
+            next_beam.sort(key=lambda n: n.evaluation, reverse=True)
+            beam = next_beam[: self.beam_width]
 
----
+        # Return the best leaf node's full trace
+        beam.sort(key=lambda n: n.evaluation, reverse=True)
+        best = beam[0]
 
-## Strategy 4: Verifier-Guided Decoding
+        return best.trace(), self.total_nodes_explored
 
-Use a trained verifier (reward model) to score and guide generation at every step — or at least at key decision points.
-
-### How It Works
-
-1. Train a **verifier** (or reward model) on labeled data to score solutions as correct/incorrect or with a confidence score.
-2. During generation, sample multiple candidate responses.
-3. Run each candidate through the verifier.
-4. Select or re-rank based on verifier scores.
-
-### Verification at Different Granularities
-
-| Granularity | Description | Example | Compute Cost |
-|------------|-------------|---------|--------------|
-| Output-level | Verify the final answer only | Math problem answer check | Low |
-| Step-level | Verify each reasoning step | Each equation in a proof | Medium |
-| Token-level | Score individual tokens | Verifier at each generation step | High |
-
-### Code Example
-
-```python
-import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-
-class Verifier:
-    """A reward model scorer for solution evaluation."""
-    
-    def __init__(self, model_name="OpenAI/summarize_from_feedback"):
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
-        self.model.eval()
-    
-    def score(self, question, answer):
-        """Score an answer for a given question (0-1)."""
-        text = f"Q: {question} A: {answer}"
-        inputs = self.tokenizer(text, return_tensors="pt", truncation=True)
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-            score = torch.sigmoid(outputs.logits).item()
-        return score
-
-def verifier_rerank(question, model, verifier, n=10):
-    """Generate N answers and rerank by verifier score."""
-    answers = model.generate(question, n=n, temperature=0.8)
-    
-    scored = []
-    for ans in answers:
-        s = verifier.score(question, ans)
-        scored.append((s, ans))
-    
-    scored.sort(key=lambda x: x[0], reverse=True)
-    return scored[0][1], scored  # best answer, all scored answers
-```
-
----
-
-## Comparison Table
-
-| Strategy | Compute Cost | Best For | Key Strength | Key Weakness |
-|----------|-------------|----------|--------------|--------------|
-| Best-of-N | Low–Medium | General QA, code gen | Simple, reliable | Diminishing returns |
-| Self-Correction | Medium | Reasoning, writing | Mimics human editing | May reinforce model biases |
-| Tree of Thoughts | Medium–High | Complex planning, math | Structured exploration | Expensive, complex to implement |
-| Verifier-Guided | Medium–High | Math, code, logic | Objective scoring | Requires training a verifier |
-
----
-
-## Code Examples
-
-### Complete Best-of-N Pipeline
-
-```python
-class BestOfN:
-    def __init__(self, generator, scorer, n=10):
-        self.generator = generator
-        self.scorer = scorer
-        self.n = n
-    
-    def solve(self, question):
-        """Generate n answers, return the best."""
-        results = []
-        for i in range(self.n):
-            answer = self.generator(question, temperature=0.7)
-            score = self.scorer(question, answer)
-            results.append({"answer": answer, "score": score, "index": i})
-        
-        # Sort by score descending
-        results.sort(key=lambda x: x["score"], reverse=True)
-        return results
-    
-    def solve_detailed(self, question):
-        """Solve and return detailed statistics."""
-        results = self.solve(question)
-        return {
-            "best": results[0],
-            "best_score": results[0]["score"],
-            "avg_score": sum(r["score"] for r in results) / len(results),
-            "score_spread": results[0]["score"] - results[-1]["score"],
-            "all_results": results
-        }
-```
-
-### Reflexion Loop
-
-```python
-def reflexion_loop(generator, question, max_rounds=3):
-    """Run a reflexion loop: generate, critique, revise."""
-    current_answer = generator(question)
-    history = []
-    
-    for round_num in range(max_rounds):
-        # Generate reflection
-        critique_prompt = (
-            f"Review this solution and identify any errors or weaknesses.\n"
-            f"Problem: {question}\n"
-            f"Solution: {current_answer}\n"
-            f"Review: "
+    def _generate_candidates(self, node: TreeNode, problem: str) -> list[TreeNode]:
+        """Generate k candidate next thoughts from the current node."""
+        prompt = (
+            f"Problem: {problem}\n\n"
+            f"Current reasoning so far:\n{node.trace()}\n\n"
+            f"Provide {self.k} different possible next thinking steps. "
+            f"Number them 1 to {self.k}."
         )
-        critique = generator(critique_prompt)
-        
-        # Check if revision is needed
-        revision_prompt = (
-            f"Based on the following critique, improve your solution.\n"
-            f"Problem: {question}\n"
-            f"Original Solution: {current_answer}\n"
-            f"Critique: {critique}\n"
-            f"Revised Solution: "
-        )
-        revised = generator(revision_prompt)
-        
-        history.append({
-            "round": round_num + 1,
-            "answer": current_answer,
-            "critique": critique,
-        })
-        
-        current_answer = revised
-    
-    return current_answer, history
+
+        raw_response = self.generator(prompt, self.temperature)
+
+        candidates: list[TreeNode] = []
+        # Simple parsing: split on numbered items
+        lines = [line.strip() for line in raw_response.split("\n") if line.strip()]
+
+        for i, line in enumerate(lines[: self.k]):
+            child = TreeNode(
+                text=line,
+                parent=node,
+                depth=node.depth + 1,
+            )
+            child.evaluation = self.evaluator(child.trace(), problem)
+            candidates.append(child)
+            self.total_nodes_explored += 1
+
+        return candidates
+
+
+# ------------------------------------------------------------------
+# Strategy 4: Verifier-Guided Decoding
+# ------------------------------------------------------------------
+def verifier_rerank(
+    prompt: str,
+    generator: Callable[[str, float], str],
+    verifier: Callable[[str, str], float],
+    n: int = 10,
+    temperature: float = 0.7,
+) -> Tuple[str, float, List[Tuple[str, float]]]:
+    """
+    Generate N answers and re-rank them using a trained verifier.
+
+    This is functionally similar to best_of_n but emphasizes using a
+    dedicated verifier model (trained on correct/incorrect labels)
+    rather than a generic scorer.
+
+    Args:
+        prompt: Input question or problem
+        generator: Callable(prompt, temperature) -> response
+        verifier: Callable(question, answer) -> float confidence score
+        n: Number of candidates to generate
+        temperature: Sampling temperature
+
+    Returns:
+        best_answer: Verifier-selected answer
+        best_score: Verifier confidence score
+        all_scored: All candidates with verifier scores
+    """
+    candidates: list[tuple[str, float]] = []
+
+    for _ in range(n):
+        answer = generator(prompt, temperature)
+        score = verifier(prompt, answer)
+        candidates.append((answer, score))
+
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    best_answer, best_score = candidates[0]
+
+    return best_answer, best_score, candidates
+
+
+# ------------------------------------------------------------------
+# Process Reward vs Outcome Reward Comparison
+# ------------------------------------------------------------------
+def compare_reward_granularity(
+    solution_steps: List[str],
+    process_reward_model: Callable[[List[str], int], float],
+    outcome_reward_model: Callable[[str], float],
+    full_solution: str,
+) -> dict:
+    """
+    Compare process-level vs outcome-level verification on the same solution.
+
+    Args:
+        solution_steps: Individual reasoning steps
+        process_reward_model: Callable(steps, step_index) -> score
+        outcome_reward_model: Callable(full_text) -> score
+        full_solution: Complete solution text
+
+    Returns:
+        Dictionary with process and outcome scores and their comparison
+    """
+    # Outcome reward: single score for the full solution
+    outcome_score = outcome_reward_model(full_solution)
+
+    # Process reward: score each step individually
+    process_scores = []
+    for i in range(len(solution_steps)):
+        score = process_reward_model(solution_steps, i)
+        process_scores.append(score)
+
+    aggregate_process = sum(process_scores) / len(process_scores) if process_scores else 0.0
+    minimum_process = min(process_scores) if process_scores else 0.0
+
+    return {
+        "outcome_score": outcome_score,
+        "process_scores": process_scores,
+        "aggregate_process": aggregate_process,
+        "minimum_process": minimum_process,
+        "disagreement": abs(outcome_score - aggregate_process),
+    }
+
+
+# ------------------------------------------------------------------
+# Example Usage
+# ------------------------------------------------------------------
+if __name__ == "__main__":
+    # Mock generator and scorer for demonstration
+    import random
+
+    random.seed(42)
+
+    def mock_generator(prompt: str, temperature: float = 0.7) -> str:
+        """Simulates generating a response."""
+        quality = random.gauss(0.5, 0.2 / temperature)
+        return f"Answer (quality={quality:.3f}): {'Correct' if quality > 0.5 else 'Incorrect'}"
+
+    def mock_scorer(question: str, answer: str) -> float:
+        """Simulates scoring a response."""
+        return random.random()
+
+    def mock_verifier(question: str, answer: str) -> float:
+        """Simulates verifier confidence."""
+        return random.random()
+
+    def mock_process_prm(steps: list[str], step_idx: int) -> float:
+        """Simulates process reward for a specific step."""
+        return random.random()
+
+    def mock_outcome_orm(text: str) -> float:
+        """Simulates outcome reward for full text."""
+        return random.random()
+
+    question = "What is the sum of all prime numbers less than 10?"
+
+    # --- Best-of-N ---
+    print("=" * 60)
+    print("Strategy 1: Best-of-N (N=5)")
+    print("=" * 60)
+    best, score, all_scored = best_of_n(
+        question, mock_generator, mock_scorer, n=5, temperature=0.7
+    )
+    print(f"Best answer: {best}")
+    print(f"Best score: {score:.4f}")
+    print(f"All scores: {[s for _, s in all_scored]}")
+
+    # --- Reflexion ---
+    print()
+    print("=" * 60)
+    print("Strategy 2: Reflexion Loop (3 rounds)")
+    print("=" * 60)
+    final_answer, history = reflexion_loop(question, mock_generator, max_rounds=3)
+    print(f"Final answer: {final_answer[:80]}...")
+    print(f"Rounds completed: {len(history)}")
+
+    # --- Tree of Thoughts ---
+    print()
+    print("=" * 60)
+    print("Strategy 3: Tree of Thoughts")
+    print("=" * 60)
+    tot = TreeOfThoughts(
+        generator=mock_generator,
+        evaluator=lambda trace, prob: random.random(),
+        k=3,
+        beam_width=2,
+        max_depth=3,
+    )
+    trace, nodes = tot.solve(question)
+    print(f"Best trace (first 100 chars): {trace[:100]}...")
+    print(f"Total nodes explored: {nodes}")
+
+    # --- Verifier Re-rank ---
+    print()
+    print("=" * 60)
+    print("Strategy 4: Verifier-Guided Re-ranking (N=5)")
+    print("=" * 60)
+    v_best, v_score, v_all = verifier_rerank(
+        question, mock_generator, mock_verifier, n=5
+    )
+    print(f"Best answer: {v_best}")
+    print(f"Verifier score: {v_score:.4f}")
+
+    # --- Process vs. Outcome Reward ---
+    print()
+    print("=" * 60)
+    print("Process vs Outcome Reward Comparison")
+    print("=" * 60)
+    steps = ["Step 1: Identify primes less than 10", "Step 2: Sum them up"]
+    comparison = compare_reward_granularity(
+        solution_steps=steps,
+        process_reward_model=mock_process_prm,
+        outcome_reward_model=mock_outcome_orm,
+        full_solution="\n".join(steps),
+    )
+    print(f"Outcome score: {comparison['outcome_score']:.4f}")
+    print(f"Process scores: {[f'{s:.4f}' for s in comparison['process_scores']]}")
+    print(f"Aggregate (mean): {comparison['aggregate_process']:.4f}")
+    print(f"Minimum: {comparison['minimum_process']:.4f}")
+    print(f"Disagreement: {comparison['disagreement']:.4f}")
 ```
 
----
+## Deep Dive
 
-## Further Reading
+### 1. The Inference-Time Compute Paradigm Shift
 
-1. **"Inference Scaling Laws"** — Wang et al. (2024) — https://arxiv.org/abs/2403.05530
-   Foundational paper on how test-time compute scales with model performance.
+Traditional AI progress followed the formula: larger dataset + more parameters + more training compute = better model. Test-time compute scaling reveals an **orthogonal axis of improvement** that was always available but systematically underexplored.
 
-2. **"Tree of Thoughts: Deliberate Problem Solving with Large Language Models"** — Yao et al. (2023) — https://arxiv.org/abs/2305.10601
-   Original ToT paper introducing systematic search over reasoning paths.
+The key insight is that a model's knowledge is not just encoded in its weights -- it's also unlockable through deliberate computation at inference time. This mirrors human intelligence: a person thinking longer, trying multiple approaches, and checking their work will produce better results than blurting out the first answer, even with the same underlying knowledge.
 
-3. **"Self-Refine: Iterative Refinement with Self-Feedback"** — Madaan et al. (2023) — https://arxiv.org/abs/2303.17651
-   Shows how models can refine their own outputs through self-critique.
+The "slo" scaling laws discovered in 2024 show that performance on reasoning tasks follows a power law in test-time compute, analogous to training-time scaling laws. Doubling the inference budget can produce performance gains equivalent to a much larger model.
 
-4. **"ReST: Reinforced Self-Training for Language Models"** — Gulcehre et al. (2023) — https://arxiv.org/abs/2308.08998
-   Combines self-generated data with test-time scaling for improved reasoning.
+```mermaid
+graph LR
+    subgraph Traditional Scaling
+        A1[More Data] --> A2[Better Model]
+        A3[More Params] --> A2
+        A4[More Training] --> A2
+    end
 
-5. **"Let's Verify Step by Step"** — Lightman et al. (2023) — https://arxiv.org/abs/2305.20050
-   Demonstrates that process-level verification beats outcome-level verification.
+    subgraph Test-Time Scaling
+        B1[Model A] --> B2[More Compute Budget]
+        B2 --> B3[Better Answers]
+    end
 
-6. **Anthropic's Constitutional AI** — https://arxiv.org/abs/2212.08073
-   Uses self-critique guided by principles for alignment.
+    A2 -.->|"or"| B1
 
----
+    style A1 fill:#e1f5e1
+    style A3 fill:#e1f5e1
+    style A4 fill:#e1f5e1
+    style B2 fill:#fff3cd
+    style B3 fill:#d1ecf1
+```
+
+### 2. Diminishing Returns in Best-of-N
+
+The improvement from Best-of-N follows a concave curve. On math problems, increasing $N$ from 1 to 10 might yield a +15% accuracy gain, but increasing from 10 to 100 only yields +5%. This is because once the model has explored its capability range, additional samples mostly cover already-explored regions of the output space.
+
+The "sweet spot" depends on task difficulty:
+- **Easy tasks**: Small $N$ (3-5) is sufficient; the model already knows the answer
+- **Medium tasks**: Moderate $N$ (10-32) finds the right answer among plausible alternatives
+- **Hard tasks**: Large $N$ (64-1000) is needed, but even then the model's capability ceiling limits the maximum achievable quality
+
+### 3. Why Self-Correction Sometimes Makes Things Worse
+
+Self-correction has a fundamental limitation: **the model must be able to detect its own errors**. If a model's error detection ability is weaker than its problem-solving ability, the "critique" phase introduces noise that pushes the solution away from the correct answer.
+
+Research by Huang et al. (2023) and Valmeekam et al. (2023) showed that for many standard LLMs, self-correction on logic puzzles and math problems actually *degrades* performance compared to a single-pass attempt. This happens because:
+
+1. The model's self-critique is biased toward finding problems that aren't there (false positives)
+2. The revise phase inherits the same blind spots as the generate phase
+3. Over multiple rounds, errors accumulate and amplify
+
+**Solutions**: Use a stronger model for the critique phase, or train the model specifically on critique-revision pairs (as in Self-Refine).
+
+### 4. Verifier Quality: The Bottleneck
+
+All test-time compute strategies that rely on ranking or pruning (Best-of-N, ToT, Verifier-Guided) are only as good as their verification signal. If the verifier is noisy or biased:
+
+- Best-of-N will select confidently wrong answers
+- ToT will prune the correct reasoning path and keep wrong ones
+- Verifier-guided decoding will converge to the verifier's preferences, not the true correct answer**
+
+This is why **Process Reward Models (PRMs)** are such an important development: by scoring intermediate reasoning steps, they provide denser supervision that correlates more strongly with final correctness than a coarse outcome-level score. Lightman et al. (2023) showed that step-level verification significantly outperforms outcome-level verification on mathematical reasoning tasks.
+
+## Common Misconceptions
+
+| Misconception | Reality |
+|---|---|
+| "More test-time compute always means better results" | No. Diminishing returns are real. Beyond optimal N the marginal gain approaches zero. |
+| "Self-correction always helps" | No. Many models cannot detect their own errors. Without good critique ability, self-correction degrades performance. |
+| "Test-time compute replaces training" | No. It works within the capability ceiling of the trained model. You still need a capable base model. |
+| "Tree of Thoughts is always superior" | ToT is expensive (exponential growth) and only outperforms when the problem admits meaningful step decomposition. |
+| "Best-of-N with N=1000 will beat any model" | No. If the base model cannot ever produce a correct answer, no amount of sampling helps. |
+| "Verifier-guided decoding is free" | Training a good verifier requires substantial labeled data. A poor verifier is worse than no verifier. |
 
 ## Exercises
 
-1. **Implement Best-of-N:** Write a script that generates 20 responses to a math problem and ranks them with a simple regex-based verifier (check if the final number is correct).
+1. **Accuracy scaling**: Using a real model (even a small one), measure accuracy on 50 math problems for $N = 1, 5, 10, 20, 50$ and plot the accuracy curve. Does it match the theoretical diminishing returns prediction?
+2. **Self-correction failure case**: Find a task where reflexion makes performance *worse* than the initial answer. Analyze why the critique phase introduced errors.
+3. **Build a ToT solver**: Implement a complete Tree of Thoughts solver for a 4x4 Sudoku puzzle. Use constraint violation count as the evaluation heuristic.
+4. **PRM training**: Collect 100 solutions to math problems with step-level annotations (correct/incorrect per step). Train a simple binary classifier as a process reward model and evaluate its correlation with final answer correctness.
+5. **Compute-optimal allocation**: Given a fixed budget of 100 forward passes, design an experiment to find the optimal allocation between number of samples and verification depth. Compare Best-of-10 with 10 rounds of reflexion vs Best-of-100 with no verification.
 
-2. **Build a Reflexion Loop:** Create a two-round reflexion system for code generation — first generate code, then critique it for bugs, then regenerate.
+## Further Reading
 
-3. **Tree of Thoughts for Sudoku:** Implement a ToT solver for 4x4 Sudoku puzzles. Use a heuristic evaluator that counts constraint violations.
+| Paper | Authors | arXiv | Key Contribution |
+|---|---|---|---|
+| **Training Verifiers to Solve Math Word Problems** | Cobbe et al. (2021) | 2110.14168 | Introduces verifier-based re-ranking for math |
+| **Chain-of-Thought Prompting Elicits Reasoning in Large Language Models** | Wei et al. (2022) | 2201.11903 | CoT prompting: sequential reasoning |
+| **AlphaCode: Deep Learning for Code Competition** | Li et al. (2022) | 2203.08814 | Large-scale code generation with ranking |
+| **Self-Refine: Iterative Refinement with Self-Feedback** | Madaan et al. (2023) | 2303.17651 | Models can refine their own outputs |
+| **Reflexion: Language Agents with Verbal Reinforcement Learning** | Shinn et al. (2023) | 2303.11366 | Verbal RL through self-reflection |
+| **Tree of Thoughts: Deliberate Problem Solving with LLMs** | Yao et al. (2023) | 2305.10601 | Systematic tree search over reasoning |
+| **Let's Verify Step by Step** | Lightman et al. (2023) | 2305.20050 | Step-level verification beats outcome-level |
+| **Self-Correction with LLMs: Are Self-Corrections Reliable?** | Huang et al. (2023) | 2309.06684 | Critical analysis of self-correction |
 
-4. **Ablation Study:** Compare single-pass generation vs. Best-of-5 vs. Best-of-20 on 10 reasoning problems. Plot the accuracy curve.
+## Summary
 
-5. **Verifier Design:** Train a simple binary classifier on GSM8K solutions (correct/incorrect) and use it to rerank model outputs.
+| Strategy | Compute Cost | Best For | Strength | Weakness |
+|---|---|---|---|---|
+| Best-of-N | $O(N)$ generations | General QA, coding | Simple, robust | Diminishing returns past N~50 |
+| Reflexion | $O(K)$ iterations | Writing, reasoning | Mimics iterative revision | Critique quality bottleneck |
+| Tree of Thoughts | $O(B \cdot K)^D$ | Complex multi-step | Systematic exploration | Exponential cost |
+| Verifier-Guided | $O(N)$ gen + verify | Math, logic | Dense supervision | Requires trained verifier |
 
 ---
 
-*Day 04 Tutorial — Advanced AI Daily*
+_Prev: [Day 03 -- Speculative Decoding](03-speculative-decoding.md)  |  Next: [Day 05 -- Multi-Agent Reflection](05-multi-agent-reflection.md)_

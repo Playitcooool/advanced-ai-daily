@@ -8,321 +8,121 @@ category: "Inference Acceleration"
 
 > **Watch the animation**: ![Speculative Decoding Animation](../gifs/03-speculative-decoding.gif)
 
----
+## Quick Reference
+
+| Term | Definition |
+|---|---|
+| Draft Model | Small model (3-10x faster) that generates K candidate tokens autoregressively |
+| Target Model | Large model that verifies all K candidates in a single forward pass |
+| Acceptance Rate (alpha) | alpha_i = min(1, q_i / r_i) probability of accepting draft token i |
+| K | Number of draft tokens generated per round |
+| Residual Distribution | max(0, q - r) / Z -- sampled when a draft token is rejected to preserve exact distribution |
 
 ## One-Line Summary
 
-Speculative decoding uses a small draft model to predict K candidate tokens in parallel, then uses the large target model to verify all K tokens in a single forward pass, accepting each token with probability min(1, p/q) -- achieving 2x to 4x inference speedup with mathematically guaranteed identical output distribution to the target model.
+Speculative decoding uses a small draft model to predict K candidate tokens in parallel, then uses the large target model to verify all K tokens in a single forward pass, accepting each token with probability mathematically guaranteed identical to sampling directly from the target model.
 
----
+## Why This Matters
 
-## Why Do We Need Speculative Decoding?
+Autoregressive language models are fundamentally **memory-bandwidth bound**, not compute-bound. Streaming weights from GPU memory dominates latency; the actual matrix multiplication on one token's hidden state is tiny. Speculative decoding amortizes the expensive target-model weight stream across multiple tokens by letting a cheap draft model guess what's next and having the target model check all guesses at once. This yields **2x to 4x throughput improvement with zero quality loss**, because the output distribution is mathematically proven to match the target model exactly.
 
-### The Autoregressive Bottleneck
+## Architecture
 
-Standard autoregressive generation produces exactly one token per forward pass of the model, regardless of how simple or predictable that token is:
+```mermaid
+flowchart TD
+    Context["Current Context\nx_1 ... x_t"] --> DraftGen["Draft Model\nK autoregressive forward passes\n<small, cheap, fast>"]
+    DraftGen --> DraftOut["Draft Tokens & Probs\nx_t+1 to x_t+K\nwith probabilities r_1 to r_K"]
+    DraftOut --> Verification["Target Model\n1 forward pass\nverifying K+1 positions\n<large, expensive>"]
+    Verification --> TargetProbs["Target Probs\nq_1 ... q_K, q_K+1\nK+1 vocab distributions"]
 
-```
-Standard decoding:
-  "The" → [forward pass: 10B FLOPs] → "cat"
-  "cat"  → [forward pass: 10B FLOPs] → "sat"
-  "sat"  → [forward pass: 10B FLOPs] → "on"
-  "on"   → [forward pass: 10B FLOPs] → "the"
+    DraftOut --> AcceptCheck["Accept/Reject Loop\nfor i = 1 to K:\n  alpha_i = min(1, q_i / r_i)\n  accept if u < alpha_i"]
+    TargetProbs --> AcceptCheck
 
-  4 tokens = 4 forward passes = 4 × 10B FLOPs = 40B FLOPs total
-```
+    AcceptCheck --> AllAccepted{"ALL accepted?"}
+    AllAccepted -->|Yes (0-K)| Bonus["Sample bonus token\nfrom q_K+1"]
+    AllAccepted -->|No| Rejection["Rejection at position j\nSample residual:\np_adj = max(0,q-r)/Z"]
+    Bonus --> Output["Output: K+1 new tokens"]
+    Rejection --> OutputRej["Output: j-1 accepted +\n1 rejection sample"]
 
-This is fundamentally memory-bandwidth bound, not compute-bound. The model's weights must be streamed from GPU memory for every single token, but the actual matrix multiplication on one token's representation is tiny. GPUs sit idle most of the time, waiting for weights to arrive.
+    OutputContext["New Context\nx_1 ... x_t + new tokens"] --> DraftGen
 
-### Speculative Decoding's Core Insight
-
-Speculative decoding asks: *Can a cheap draft model guess what the target model will produce, and only pay for the target model's compute once to check all guesses at once?*
-
-The answer is yes, and the key is a verification algorithm that guarantees the output distribution is exactly identical to what running the target model alone would produce:
-
-```
-Speculative decoding (draft K=3, target verifies):
-  Draft (130M): "The" → "cat" → "sat" → "on"   [3 forward passes of small model]
-  Target (10B):   "The" + 3 tokens → verify all in 1 pass
-  Result: 3 tokens with 1 big forward pass instead of 3
-  Speedup: ~2-3x with ZERO quality loss
-
-  Tokens produced per target forward pass:
-    Standard:  always 1
-    SpecDec:   0.5 to K+1 (average ≈ 2-4 depending on draft quality)
+    style DraftGen fill:#e1f5e1
+    style Verification fill:#ffe1e1
+    style AcceptCheck fill:#fff3cd
 ```
 
----
-
-## Algorithm Walkthrough
-
-```
-==================================================================
-          Speculative Decoding: Draft + Verify Loop
-==================================================================
-
-Step 1: Generate K draft tokens autoregressively
-────────────────────────────────────────────────
-
-  ┌──────────────────┐
-  │  Current context │──► Draft model generates x_1, x_2, ..., x_K
-  │  x_1, ..., x_t   │    (K forward passes of SMALL model)
-  └──────────────────┘
-
-
-Step 2: Verify all K+1 candidates in ONE target forward pass
-─────────────────────────────────────────────────────────────
-
-  ┌──────────────────────────────────────────────────────┐
-  │  Target model inputs: x_1, ..., x_t, x_1, ..., x_K   │
-  │                                                      │
-  │  Target computes: q(x_{t+1}), q(x_{t+2}), ...        │
-  │                    q(x_{t+K}), q(x_{t+K+1})         │
-  │  (1 forward pass of LARGE model produces K+1 probs) │
-  └─────────────┬────────────────────────────────────────┘
-                │
-                ▼
-
-
-Step 3: Parallel verification with acceptance probability
-─────────────────────────────────────────────────────────
-
-  ┌─────────────────────────────────────────────────────────────┐
-  │  For each position i = 1 to K:                              │
-  │                                                             │
-  │  Draft prob:  r_i = P_draft(x_i | x_1, ..., x_{i-1})       │
-  │  Target prob: q_i = P_target(x_i | x_1, ..., x_{i-1})      │
-  │                                                             │
-  │  Acceptance: α_i = min(1, q_i / r_i)                        │
-  │                                                             │
-  │  Draw u ~ Uniform(0, 1)                                    │
-  │  If u < α_i:                                               │
-  │    ACCEPT x_i ✓                                             │
-  │    Continue to next position                                │
-  │  Else:                                                      │
-  │    REJECT x_i ✗                                             │
-  │    Replace with sample from adjusted distribution           │
-  │    Break the verification loop                              │
-  │                                                             │
-  │  If ALL K accepted, sample 1 more from q(x_{t+K+1})         │
-  └─────────────┬───────────────────────────────────────────────┘
-                │
-                ▼
-     Append accepted tokens to output sequence
-     Repeat from Step 1 with updated context
-
-
-Step 4: Rejection sampling (corrected distribution)
-────────────────────────────────────────────────────
-
-  If position j is rejected:
-    Compute adjusted distribution:
-      p_adjusted(x) = max(0, q(x) - r(x)) / (1 - Σ_{accepted} acceptance_prob)
-
-    Sample x_{t+j} ~ p_adjusted and append
-
-  This correction is CRITICAL: it ensures the final
-  distribution is EXACTLY q, not an approximation.
-```
-
----
-
-## Mathematical Formulation
+## The Math
 
 ### Acceptance Probability
 
-For draft token x_i at position i, the draft model assigns probability r_i and the target model assigns probability q_i. The token x_i is accepted with probability:
+For each draft token $x_i$ at position $i$, the draft model assigns probability $r_i$ and the target model assigns probability $q_i$. The acceptance probability is:
 
-```
-α_i = min(1, q_i / r_i)
-```
+$$\alpha_i = \min\left(1, \frac{q_i}{r_i}\right)$$
 
-This formula has three cases:
+There are three cases:
 
-```
-Case 1: q_i > r_i  (target is more confident than draft)
-  α_i = 1 → ALWAYS accept ✓
-  The draft was actually conservative about a good token.
+| Case | Condition | Acceptance | Interpretation |
+|---|---|---|---|
+| 1 | $q_i > r_i$ | $\alpha_i = 1$ | Target is *more* confident -- always accept |
+| 2 | $q_i \lessapprox r_i$ | $\alpha_i \approx 1$ | Close agreement -- almost always accept |
+| 3 | $q_i \ll r_i$ | $\alpha_i < 1$ | Draft overconfident -- may reject |
 
-Case 2: q_i < r_i but q_i ≈ r_i  (target agrees with draft approximately)
-  α_i ≈ 1 → Almost always accept ✓
-  Small deviation, small risk of rejection.
+### Distribution Exactness Proof
 
-Case 3: q_i < r_i significantly  (target disagrees with draft)
-  α_i < 1 → May reject ✗
-  The draft was over-confident about a wrong token.
-```
+The fundamental theorem: speculative decoding produces outputs distributed **exactly** as if sampling directly from the target model alone.
 
-### Why min(1, q/r) Preserves the Exact Distribution
+When a draft token $x_i$ with draft probability $r_i$ is accepted at probability $\alpha_i = \frac{q_i}{r_i}$, the effective probability is:
 
-The key theorem: the output of speculative decoding is mathematically identical in distribution to greedy/ancestral sampling from the target model alone.
+$$P(\text{accept } x_i) = r_i \cdot \frac{q_i}{r_i} = q_i$$
 
-```
-Proof sketch:
+When rejected, we sample from the residual distribution:
 
-P(accept x_i) = α_i = q_i / r_i   (when q_i ≤ r_i)
+$$p_{\text{adj}}(x) = \frac{\max\left(0,\; q(x) - r(x)\right)}{Z}$$
 
-The overall probability of accepting sequence x_1, ..., x_k AND then
-accepting x_{k+1} (via the final sample) is:
+where the normalization constant is:
 
-  ∏_{i=1}^{k} [r_i · (q_i/r_i)] · q_{k+1}  =  ∏_{i=1}^{k} q_i · q_{k+1}  =  ∏_{i=1}^{k+1} q_i
+$$Z = \sum_{x} \max\left(0,\; q(x) - r(x)\right)$$
 
-Which equals the target model's probability. ∎
+The total probability of outputting token $x$ is then:
 
-When a token is rejected, the adjusted distribution p_adjusted is:
-
-  p_adjusted(x) = max(0, q(x) - r(x)) / Z
-
-where Z = 1 - Σ_{x: q(x)≥r(x)} r(x) · α(x) = Σ_x max(0, q(x) - r(x))
-
-This is the "residual mass" of probability that the draft failed to
-capture. Sampling from p_adjusted exactly recovers the remaining
-probability mass needed for an exact match with q. ∎
-```
+$$P(x) = \underbrace{r(x) \cdot \min\left(1, \frac{q(x)}{r(x)}\right)}_{\text{accepted}} + \underbrace{\left(1 - \sum_{y} r(y) \cdot \alpha(y)\right) \cdot \frac{\max(0, q(x) - r(x))}{Z}}_{\text{rejected and resampled}} = q(x) \quad \blacksquare$$
 
 ### Expected Acceptance Rate and Speedup
 
-The expected number of tokens accepted per round is:
+Assuming approximately constant acceptance rate $\alpha$, the expected number of accepted tokens per round is:
 
-```
-E[accepted] = Σ_{i=1}^{K} α_i · Π_{j=1}^{i-1} α_j
+$$\mathbb{E}[N_{\text{accepted}}] = \sum_{i=1}^{K} \alpha^i \cdot \alpha^{i-1} = \frac{1 - \alpha^K}{1 - \alpha}$$
 
-If we approximate all α_i ≈ α (constant acceptance rate):
-  E[accepted] ≈ (1 - α^K) / (1 - α)  for α < 1
-  E[accepted] ≈ K  for α ≈ 1
+The total tokens produced per target forward pass is $\mathbb{E}[N_{\text{accepted}}] + 1$ (with $+1$ for the bonus token when all draft tokens are accepted).
 
-Speedup factor ≈ E[accepted] + 1  (the +1 is the draft model's cost fraction)
-
-Example calculations:
-  α = 0.90,  K=4:  E[accepted] ≈ 4.0 → Speedup ≈ 4.1x
-  α = 0.80,  K=4:  E[accepted] ≈ 2.9 → Speedup ≈ 3.1x
-  α = 0.70,  K=4:  E[accepted] ≈ 2.2 → Speedup ≈ 2.5x
-  α = 0.50,  K=4:  E[accepted] ≈ 1.0 → Speedup ≈ 1.4x
-  α = 0.95,  K=8:  E[accepted] ≈ 6.7 → Speedup ≈ 6.9x
-```
+| alpha (acceptance rate) | K=4: Expected tokens | Speedup |
+|---|---|---|
+| 0.95 | 6.7 | 6.9x |
+| 0.90 | 4.0 | 4.1x |
+| 0.80 | 2.9 | 3.1x |
+| 0.70 | 2.2 | 2.5x |
+| 0.50 | 1.0 | 1.4x |
 
 ### Optimal K Selection
 
-```
-K_optimal depends on acceptance rate α:
+$$K_{\text{optimal}} \approx \frac{-\log(0.1)}{-\log(\alpha)}$$
 
-  Low quality draft (α ≈ 0.5):  K = 1 to 3  (more tokens = more rejections)
-  Medium quality (α ≈ 0.7):     K = 3 to 5  (balance)
-  High quality draft (α ≈ 0.9): K = 5 to 10 (longer speculation pays off)
+This gives the $K$ value where there is a 90% probability of at least one acceptance.
 
-Rule of thumb: K ≈ -log(0.1) / -log(α)  (K that gives 90% chance of at least 1 acceptance)
-  α = 0.7 → K ≈ 6.5
-  α = 0.8 → K ≈ 10.3
-  α = 0.9 → K ≈ 22
-  α = 0.95 → K ≈ 45
-
-In practice, K = 3 to 8 is a good range because:
-  - Beyond K=8, diminishing returns (rejection probability compounds)
-  - Larger K requires more target model KV-cache capacity
-  - Communication overhead grows with K
-```
-
----
-
-## Method Comparison
-
-| Dimension | Standard AR | Speculative Decoding | Medusa | Lookahead Decoding | EAGLE |
+| Draft quality (alpha) | 0.5 | 0.7 | 0.8 | 0.9 | 0.95 |
 |---|---|---|---|---|---|
-| Speedup | 1x (baseline) | 2-4x | 2-3x | 2-4x | 2-5x |
-| Quality loss | None | None (exact) | Small (approximate) | None (exact) | None (exact) |
-| Draft model needed | N/A | Yes (separate small model) | No (head-based) | No (n-gram cache) | No (feature-based) |
-| Max accepted per step | 1 | K | K heads × depth | N-gram length | K (feature-drafted) |
-| Memory overhead | Base model only | Base + draft model | K × vocab heads | N-gram lookup table | Feature layers |
-| Training required | N/A | Separate draft model fine-tune | Train K heads on target | No training | Train feature layers |
-| Best use case | General, no extra setup | When draft model available | Single-model deployment | Repetitive/templated text | High-accuracy inference |
-| Theoretical guarantee | Exact target dist. | Exact target dist. | Approximate | Exact target dist. | Exact target dist. |
+| Recommended K | 1-3 | 3-5 | 4-7 | 5-10 | 8-12 |
 
----
+In practice, $K = 3$ to $8$ is the sweet spot: beyond that, diminishing returns set in from compounding rejection probability.
 
-## Variants of Speculative Decoding
-
-### 1. Classic Speculative Decoding (Chen et al.)
-
-The original approach using a separate small draft model:
-
-```
-Architecture:
-  Draft model: 125M params (e.g., distilled from target)
-  Target model: 7B+ params (original)
-
-  Draft generates K tokens autoregressively → Target verifies
-
-  Pros: Simple, exact, well-studied
-  Cons: Requires training/obtaining a draft model
-```
-
-### 2. Medusa: Multi-Head Speculative Decoding
-
-Instead of a separate draft model, Medusa adds K additional "heads" to the target model:
-
-```
-         ┌─────────────┐
-         │  Transformer │
-         │   layers     │
-         └──────┬───────┘
-                │
-           ┌────┼────┬────┬────────┐
-           ▼    ▼    ▼    ▼        ▼
-       Head_0 Head_1 Head_2 Head_3 Head_4
-       (orig)  (t+1)  (t+2)  (t+3)  (t+4)
-
-  Each head predicts a future token independently,
-  bypassing autoregressive generation.
-
-  Key trade-off:
-    - No separate model needed (simpler deployment)
-    - Each head is weaker than a full autoregressive model
-    - Acceptance rate is lower than a dedicated draft model
-    - Quality is approximate, not exact
-```
-
-### 3. Lookahead Decoding
-
-Uses an n-gram cache to skip tokens that have appeared before:
-
-```
-  During generation, maintain a dictionary:
-    prefix_ngram → likely_continuation
-
-  When current context matches a cached prefix:
-    Directly "look ahead" to the cached continuation
-    Verify with target model
-
-  Best for: Repetitive text, templates, code patterns
-  Worst for: Novel, unpredictable text
-```
-
-### 4. EAGLE: Feature-Based Drafting
-
-Instead of training a separate small model, EAGLE trains draft heads that predict future tokens from intermediate layer representations:
-
-```
-  EAGLE insight: Intermediate layers contain useful
-  information about future tokens. A small network
-  on top of intermediate features can draft accurately
-  without a full separate model.
-
-  Architecture:
-    Target model forward pass → extract intermediate features
-    Draft network (MLP + attention) on top of features → predict next tokens
-    Target model verifies the draft
-
-  Key advantages:
-    - Higher acceptance rate than Medusa (uses rich intermediate features)
-    - Lower memory than separate draft model
-    - Exact distribution guarantee
-```
-
----
-
-## Python Code Implementation
+## Full Python Implementation
 
 ```python
+"""
+Speculative Decoding -- Lossless Inference Acceleration
+Day 03 Tutorial -- Advanced AI Daily
+"""
+
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -333,73 +133,69 @@ def speculative_verify(
     draft_probs: torch.Tensor,
     target_logits: torch.Tensor,
     temperature: float = 1.0,
-) -> tuple[torch.Tensor, int, torch.Tensor | None]:
+) -> tuple[torch.Tensor, int, int | None]:
     """
     Verify draft tokens against the target model's distribution.
 
-    This implements the core verification algorithm of speculative
-    decoding, which guarantees the output distribution is exactly
-    identical to sampling from the target model alone.
+    Implements the core verification algorithm of speculative decoding,
+    which guarantees the output distribution is exactly identical to
+    sampling from the target model alone.
 
     Args:
-        draft_tokens: Shape (K,) the tokens generated by the draft model
-        draft_probs:  Shape (K,) probability the draft assigned to its own predictions
-        target_logits: Shape (K+1, vocab_size) logits from target model for
-                       positions t+1 through t+K+1
-        temperature:   Sampling temperature (default 1.0)
+        draft_tokens: Shape (K,) token IDs generated by the draft model
+        draft_probs: Shape (K,) probability the draft assigned to each prediction
+        target_logits: Shape (K+1, vocab_size) logits from the target model
+            for positions t+1 through t+K+1
+        temperature: Sampling temperature (default 1.0)
 
     Returns:
-        accepted_tokens: Tokens accepted in this round
+        accepted_tokens: Token IDs accepted in this round
         n_accepted: Number of draft tokens accepted (0 to K)
-        replacement_token: If rejection occurred, the token sampled
-                          from the adjusted distribution (None if all accepted)
+        replacement_token: If rejection occurred, the token sampled from the
+            residual distribution (None if all accepted)
     """
     K = draft_tokens.size(0)
 
-    # Get target probabilities for draft token positions
-    # Note: target_logits[0] corresponds to position t+1, etc.
+    # Get target probabilities with temperature scaling
     target_probs = F.softmax(target_logits / temperature, dim=-1)  # (K+1, vocab)
 
-    accepted_tokens = []
+    accepted_tokens: list[int] = []
     n_accepted = 0
-    replacement_token = None
+    replacement_token: int | None = None
 
-    # --- Verify each draft token in order ---
+    # --- Verify each draft token sequentially ---
     for i in range(K):
-        r_i = draft_probs[i]           # Draft's probability for its prediction
-        q_i = target_probs[i, draft_tokens[i]]  # Target's probability for draft's token
+        r_i = draft_probs[i].item()  # Draft's probability for its prediction
+        q_i = target_probs[i, draft_tokens[i]].item()  # Target's probability
 
-        # Acceptance probability
-        alpha_i = min(1.0, q_i / r_i)
+        # Acceptance probability: alpha_i = min(1, q_i / r_i)
+        alpha_i = min(1.0, q_i / r_i) if r_i > 1e-10 else 0.0
 
         if torch.rand(1).item() < alpha_i:
             # ACCEPT this token
             accepted_tokens.append(draft_tokens[i].item())
             n_accepted += 1
         else:
-            # REJECT this token
-            # Sample from adjusted (residual) distribution
-            adjusted = torch.clamp(target_probs[i] - draft_probs[i].unsqueeze(-1).expand_as(target_probs[i]) * 0.0, min=0.0)
+            # REJECT this token -- sample from the residual distribution
+            # p_adjusted(x) = max(0, q(x) - r(x)) / Z
+            # where r(x) is nonzero only for the draft token
 
-            # Actually compute: max(0, q(x) - r(x)) for all x in vocab
-            # where r(x) = draft_prob if x == draft_token, else 0
             r_expanded = torch.zeros_like(target_probs[i])
             r_expanded[draft_tokens[i]] = r_i
 
             adjusted = torch.clamp(target_probs[i] - r_expanded, min=0.0)
             adjusted_sum = adjusted.sum()
 
-            if adjusted_sum > 0:
+            if adjusted_sum > 1e-10:
                 adjusted = adjusted / adjusted_sum
-                replacement = torch.multinomial(adjusted, 1)
-                replacement_token = replacement.item()
+                replacement_token = torch.multinomial(adjusted, 1).item()
             else:
-                # Edge case: just sample from target
-                replacement = torch.multinomial(target_probs[i], 1)
-                replacement_token = replacement.item()
+                # Edge case: just sample from target distribution
+                replacement_token = torch.multinomial(target_probs[i], 1).item()
             break
 
-    return torch.tensor(accepted_tokens), n_accepted, replacement_token
+    accepted_tensor = torch.tensor(accepted_tokens, dtype=torch.long)
+    return accepted_tensor, n_accepted, replacement_token
 
 
 def speculative_decoding_step(
@@ -413,54 +209,49 @@ def speculative_decoding_step(
     Perform one step of speculative decoding.
 
     The draft model generates max_draft_length candidate tokens
-    autoregressively, and the target model verifies them in one pass.
+    autoregressively, and the target model verifies them in a single pass.
 
     Args:
-        draft_model: Smaller model for drafting (must support forward + return logits)
-        target_model: Large model for verification
+        draft_model: Smaller model for drafting (must return logits)
+        target_model: Large model for verification (must return logits)
         context: Shape (1, seq_len) current token sequence
         max_draft_length: Maximum number of draft tokens (K)
         temperature: Sampling temperature
 
     Returns:
-        new_tokens: All tokens appended this round (shape varies: 0 to K+1)
+        new_tokens: All tokens appended this round (0 to K+1 tokens)
         n_accepted: Number of draft tokens accepted
     """
-    draft_tokens_list = []
-    draft_probs_list = []
+    draft_tokens_list: list[int] = []
+    draft_probs_list: list[float] = []
 
     current = context.clone()
 
     # --- Phase 1: Draft generation (autoregressive with small model) ---
     with torch.no_grad():
         for _ in range(max_draft_length):
-            # Draft model forward pass (small model, fast)
             draft_logits = draft_model(current)  # (1, seq, vocab)
-            next_token_logits = draft_logits[0, -1, :]
-            next_token_probs = F.softmax(next_token_logits / temperature, dim=-1)
+            next_logits = draft_logits[0, -1, :]
+            next_probs = F.softmax(next_logits / temperature, dim=-1)
 
-            # Sample a token from draft distribution
-            draft_token = torch.multinomial(next_token_probs, 1)
-            draft_prob = next_token_probs[draft_token].item()
+            # Sample a token from the draft distribution
+            draft_token = torch.multinomial(next_probs, 1)
+            draft_prob = next_probs[draft_token].item()
 
             draft_tokens_list.append(draft_token.item())
             draft_probs_list.append(draft_prob)
 
-            # Append to draft input for next step
             current = torch.cat([current, draft_token.unsqueeze(0)], dim=-1)
 
-    draft_tokens = torch.tensor(draft_tokens_list, device=context.device)
-    draft_probs = torch.tensor(draft_probs_list, device=context.device)
+    draft_tokens = torch.tensor(draft_tokens_list, dtype=torch.long, device=context.device)
+    draft_probs = torch.tensor(draft_probs_list, dtype=torch.float32, device=context.device)
 
     # --- Phase 2: Target verification (one big forward pass) ---
     with torch.no_grad():
-        # Target model verifies all positions in one pass
-        # Input: context + all K draft tokens
         target_input = torch.cat([context, draft_tokens.unsqueeze(0)], dim=-1)
         target_logits = target_model(target_input)  # (1, seq+K, vocab)
 
         # Extract logits for draft positions and one extra
-        # We need logits at positions: len(context), len(context)+1, ..., len(context)+K
         verify_logits = target_logits[0, -max_draft_length - 1:, :]
 
     # --- Phase 3: Acceptance/rejection ---
@@ -468,13 +259,15 @@ def speculative_decoding_step(
         draft_tokens, draft_probs, verify_logits, temperature
     )
 
-    # Build output tokens
+    # --- Build output tokens ---
     if replacement is not None:
-        # Rejection happened: append accepted + replacement
-        new_tokens = torch.cat([accepted_tokens, torch.tensor([replacement], device=context.device)])
+        # Rejection occurred: append accepted tokens + replacement
+        new_tokens = torch.cat([
+            accepted_tokens,
+            torch.tensor([replacement], device=context.device),
+        ])
     else:
-        # All accepted + one bonus token from target
-        n_accepted = max_draft_length
+        # All K accepted + one bonus token from target
         bonus_logits = verify_logits[-1, :]  # Position t+K+1
         bonus_probs = F.softmax(bonus_logits / temperature, dim=-1)
         bonus_token = torch.multinomial(bonus_probs, 1)
@@ -486,46 +279,36 @@ def speculative_decoding_step(
 class MockModel:
     """
     A mock model for demonstrating speculative decoding.
-    In production, these would be actual transformer models.
+    In production, these would be actual Transformer models.
     """
 
     def __init__(self, vocab_size: int, hidden_size: int, is_large: bool = True):
         self.vocab_size = vocab_size
         self.hidden_size = hidden_size
         self.is_large = is_large
-        # Simple linear projection to simulate vocabulary logits
         self.proj = torch.nn.Linear(hidden_size, vocab_size)
 
         if is_large:
-            print(f"  Target model: {self.vocab_size} vocab, {hidden_size} hidden (LARGE)")
+            print(f"  Target model: {vocab_size} vocab, {hidden_size} hidden (LARGE)")
         else:
-            print(f"  Draft model:  {self.vocab_size} vocab, {hidden_size} hidden (small)")
+            print(f"  Draft model:  {vocab_size} vocab, {hidden_size} hidden (small)")
 
     def forward(self, token_ids: torch.Tensor) -> torch.Tensor:
         """
-        Simulated forward pass - just projects token embeddings to logits.
-
-        Args:
-            token_ids: Shape (batch, seq) token IDs
-
-        Returns:
-            logits: Shape (batch, seq, vocab_size) simulated logits
+        Simulated forward pass projecting token embeddings to logits.
         """
         batch, seq = token_ids.shape
-        # Create deterministic but non-trivial logits based on token IDs
         embeddings = token_ids.unsqueeze(-1).expand(-1, -1, self.hidden_size).float()
-        # Add some structure: later tokens influence later positions
         positional_bias = torch.arange(seq, device=token_ids.device).unsqueeze(0).unsqueeze(-1)
         features = embeddings + 0.01 * positional_bias
-        logits = self.proj(features)
-        return logits
+        return self.proj(features)
 
-    def __call__(self, x):
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
         return self.forward(x)
 
 
 # ------------------------------------------------------------------
-# Example usage: comparing standard vs speculative decoding
+# Benchmark: Standard AR vs. Speculative Decoding
 # ------------------------------------------------------------------
 if __name__ == "__main__":
     torch.manual_seed(42)
@@ -544,18 +327,18 @@ if __name__ == "__main__":
     n_rounds = 10
 
     # --- Run speculative decoding ---
-    print(f"Running speculative decoding (K={K}, rounds={n_rounds})...")
+    print(f"Running speculative decoding (K={K}, {n_rounds} rounds)...")
     print("=" * 60)
 
     context = context_tokens.clone()
-    all_spec_tokens = []
+    all_spec_tokens: list[int] = []
     total_draft = 0
     total_accepted = 0
 
     for round_idx in range(n_rounds):
         new_tokens, n_accepted = speculative_decoding_step(
             draft_model, target_model, context,
-            max_draft_length=K, temperature=1.0
+            max_draft_length=K, temperature=1.0,
         )
         context = torch.cat([context, new_tokens.unsqueeze(0)], dim=-1)
         all_spec_tokens.extend(new_tokens.tolist())
@@ -563,166 +346,143 @@ if __name__ == "__main__":
         total_draft += K
         total_accepted += n_accepted
 
-        print(f"  Round {round_idx+1:2d}: drafted {K}, adopted {n_accepted}+"
-              f"{1 if new_tokens.shape[0] > n_accepted else 0} = "
-              f"{new_tokens.shape[0]} tokens  "
-              f"(tokens so far: {len(all_spec_tokens)})")
+        bonus = 1 if new_tokens.shape[0] > n_accepted else 0
+        print(
+            f"  Round {round_idx + 1:2d}: drafted {K}, "
+            f"accepted {n_accepted}+{bonus} = {new_tokens.shape[0]} tokens"
+        )
 
-    accept_rate = total_accepted / total_draft
-    tokens_per_target_pass = len(all_spec_tokens) / n_rounds
+    accept_rate = total_accepted / total_draft if total_draft > 0 else 0
+    tokens_per_target = len(all_spec_tokens) / n_rounds
 
     print()
     print("Results:")
-    print(f"  Total draft tokens: {total_draft}")
-    print(f"  Total accepted:     {total_accepted}")
-    print(f"  Acceptance rate:    {accept_rate:.1%}")
+    print(f"  Total draft tokens:     {total_draft}")
+    print(f"  Total accepted:         {total_accepted}")
+    print(f"  Acceptance rate:        {accept_rate:.1%}")
     print(f"  Total tokens generated: {len(all_spec_tokens)}")
-    print(f"  Target model calls:   {n_rounds} "
-          f"(standard would need {len(all_spec_tokens)} calls)")
-    print(f"  Effective speedup:    {tokens_per_target_pass:.2f}x "
-          f"(tokens per target forward pass)")
-    print()
+    print(f"  Target model calls:     {n_rounds} "
+          f"(standard AR would need {len(all_spec_tokens)})")
+    print(f"  Tokens per target pass: {tokens_per_target:.2f}")
 
-    # --- Compare: standard autoregressive (simulated) ---
-    print("Comparison: standard AR would require:")
-    print(f"  {len(all_spec_tokens)} target model forward passes")
-    print(f"  vs. {n_rounds} target passes + {total_draft} draft passes")
-    print(f"  (draft model is ~{256/64:.0f}x smaller/faster)")
-    draft_cost = total_draft / (256/64)
-    total_cost_equiv = n_rounds + draft_cost
-    print(f"  Equivalent cost ratio: {n_rounds / total_cost_equiv:.2f}x theoretical speedup")
+    # Standard AR comparison
+    print()
+    print("Comparison with standard autoregressive:")
+    print(f"  Standard AR: {len(all_spec_tokens)} target forward passes")
+    print(f"  Speculative:{n_rounds} target passes + {total_draft} draft passes")
+    print(f"  Draft model is ~{256 / 64:.0f}x smaller")
+    draft_equiv = total_draft / (256 / 64)
+    speedup = len(all_spec_tokens) / (n_rounds + draft_equiv)
+    print(f"  Estimated speedup: {speedup:.2f}x")
 ```
 
----
+## Variants of Speculative Decoding
+
+```mermaid
+flowchart LR
+    subgraph Draft Strategies
+        A["Classic SpecDec\nSeparate small model\nHighest accuracy"]
+        B["Medusa\nMulti-head on target\nNo separate model"]
+        C["EAGLE\nFeature-based drafting\nRich intermediate reps"]
+        D["Lookahead\nN-gram cache\nNo training needed"]
+    end
+
+    subgraph Shared Verification
+        V["Target Model Verification\nAccept/Reject with\nalpha = min(1, q/r)\nLossless guarantee"]
+    end
+
+    A --> V
+    B --> V
+    C --> V
+    D --> V
+
+    style A fill:#e1f5e1
+    style B fill:#e1f5e1
+    style C fill:#e1f5e1
+    style D fill:#e1f5e1
+    style V fill:#fff3cd
+```
+
+| Variant | Draft Mechanism | Acceptance Rate | Training Required | Distribution Guarantee |
+|---|---|---|---|---|
+| Classic | Separate small model | High (70-90%) | Distillation needed | Exact |
+| Medusa | Additional LM heads | Medium (40-60%) | Train K heads | Approximate |
+| EAGLE | Feature-based MLP | High (60-85%) | Train feature net | Exact |
+| Lookahead | N-gram cache | Variable (20-80%) | None | Exact |
 
 ## Deep Dive
 
-### 1. The Fundamental Theorem: Why Speculative Decoding is Lossless
+### 1. The Fundamentality of Lossless Verification
 
-This is the most important result in speculative decoding, and it is often misunderstood. The rejection sampling mechanism is not a heuristic -- it is an exact mathematical construction that guarantees the output distribution matches the target model perfectly.
+The rejection sampling mechanism in speculative decoding is not a heuristic -- it is an exact mathematical construction. At each step, either:
 
-```
-Target distribution for next token: q(x)
-Draft distribution for next token:  r(x)
+- The draft token $x$ is accepted with probability $r(x) \cdot \frac{q(x)}{r(x)} = q(x)$, contributing the correct target probability
+- The draft token is rejected, and the residual distribution $\frac{\max(0, q(x) - r(x))}{Z}$ captures exactly the remaining probability mass
 
-Naive approach (WRONG):
-  Just accept the draft token always.
-  Result: output follows r(x), not q(x) → quality loss.
+This decomposition ensures $P(x) = q(x)$ for every output token, meaning the generated sequence is statistically indistinguishable from what the target model alone would produce.
 
-Better approach (WRONG):
-  Accept draft token if q(x) > threshold.
-  Result: output is a biased subset → quality loss.
+### 2. Draft Model Design Principles
 
-Correct approach (EXACT):
-  Accept with α(x) = min(1, q(x)/r(x)).
-  If rejected, sample from p_adjusted(x) = max(0, q(x)-r(x)) / Z.
+A good draft model must satisfy three constraints simultaneously:
 
-  Result: output follows q(x) EXACTLY.
-  This is not an approximation -- it is a mathematical identity.
-```
+- **Speed**: 3-10x faster than target model. If drafting takes too long, the savings from fewer target calls evaporate.
+- **Alignment**: The draft's probability estimates should correlate with the target's, even if the top-1 token differs. High acceptance rate matters more than top-1 accuracy.
+- **Calibration**: Overconfident drafts (assigning 99% to tokens the target rates at 0.1%) destroy acceptance rates. Well-calibrated, slightly conservative drafts perform best.
 
-The proof is essentially this: at every step, the algorithm either accepts the draft token (contributing r(x) · q(x)/r(x) = q(x) to the output) or rejects it and samples from the residual distribution (contributing the remaining probability mass that sums to the correct q(x)). The decomposition q(x) = q(x) · 1 = q(x) · [r(x)/r(x)] works out because the rejection sampling exactly captures the gap between what the draft provides and what the target requires.
+| Draft Strategy | Setup Cost | Acceptance | Best When |
+|---|---|---|---|
+| Distilled small model | Moderate | 70-90% | General inference with dedicated hardware |
+| Same model, fewer layers | Low | 50-70% | Single-GPU, no extra model storage |
+| N-gram cache | None | 20-80% | Repetitive/templated generation |
+| Medusa heads | Low | 40-60% | Single-model deployment constraint |
+| EAGLE features | Moderate | 60-85% | High-accuracy single-model deployment |
 
-### 2. Draft Model Design: What Makes a Good Draft Model?
+### 3. Temperature Effects on Acceptance
 
-The draft model does NOT need to be as accurate as the target model. It needs to be:
+Temperature fundamentally shifts the acceptance landscape:
 
-1. **Fast**: Typically 3-10x faster than the target model. If the draft is too slow, the time spent generating K candidates exceeds the time saved by verifying them in one pass.
+- **Low T ($\approx 0.1$)**: Both distributions concentrate on the top token. Acceptance becomes binary -- either perfect agreement ($\alpha \approx 1$) or near-certain rejection ($\alpha \approx 0$). High variance in speedup.
+- **High T ($\approx 2.0$)**: Both distributions flatten. The ratio $q(x)/r(x)$ stays closer to 1 across tokens, but specific token agreement drops.
+- **Sweet spot ($T = 0.5$ to $1.0$)**: Enough concentration for meaningful draft predictions, enough spread to maintain reasonable acceptance rates.
 
-2. **Diverse**: The draft must produce plausible tokens, even if not the exact tokens the target would choose. High acceptance rate is more important than top-1 accuracy.
+### 4. Engineering Considerations for Production
 
-3. **Well-calibrated**: The draft's probability estimates should roughly track the target's. If the draft assigns 99% probability to a token that the target assigns 0.1%, the acceptance rate will be poor.
+**KV Cache management**: The target model's KV cache must be built for $K+1$ positions simultaneously, but rejected positions must be evicted. Efficient implementations:
+1. Fill KV cache for all $K+1$ positions
+2. Keep only the first $n_{\text{accepted}}$ positions plus the bonus token
+3. Invalidate and reuse the rejected position slots
 
-Common draft model choices:
+**Batched decoding**: For serving, draft tokens from multiple requests can be batched and verified in parallel, with padding to the maximum $K$ in the batch.
 
-```
-Draft strategy          Acceptance rate  Setup complexity
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Distilled small model   High (70-90%)    Moderate (SFT distillation)
-Same model, fewer layers Medium (50-70%)  Low (just use subset)
-n-gram cache            Variable (20-80%) None (just cache)
-Medusa heads            Medium (40-60%)  Low (train heads only)
-EAGLE features          High (60-85%)    Moderate (train feature net)
-```
+**Asynchronous drafting**: Advanced systems run the draft model continuously in the background while the target model processes previous rounds, completely hiding the draft latency.
 
-### 3. Temperature and Its Effect on Acceptance Rate
+### Common Misconceptions
 
-Temperature significantly affects the acceptance rate:
+| Misconception | Reality |
+|---|---|
+| "Speculative decoding changes the output distribution" | False. The rejection sampling mechanism makes it mathematically exact. |
+| "The draft model needs to be very accurate" | Not true. It needs good probability calibration, not high top-1 accuracy. |
+| "Bigger K is always better" | No. Beyond K=8 the acceptance probability compounds unfavorably and memory overhead grows. |
+| "Speculative decoding only works with a separate model" | Medusa, EAGLE, and Lookahead all work without separate models. |
+| "Speculative decoding helps in all scenarios" | It hurts performance in compute-bound workloads (large batch serving), for very short sequences, or with poorly matched draft models. |
 
-```
-At low temperature (T = 0.1):
-  Both models concentrate probability on the top token.
-  If they agree on the top token → α ≈ 1 (always accept).
-  If they disagree → α ≈ 0 (almost always reject).
-  Binary outcome, high variance in speedup.
+## Exercises
 
-At high temperature (T = 2.0):
-  Both distributions are flatter.
-  q(x)/r(x) ratios are closer to 1 across tokens.
-  More stable but lower acceptance of specific tokens.
-
-Sweet spot: T = 0.5 to T = 1.0
-  Enough concentration for meaningful predictions,
-  but enough spread for reasonable acceptance rates.
-```
-
-### 4. Speculative Decoding in Practice: Engineering Challenges
-
-**KV Cache management:** The target model's KV cache must be populated for K positions simultaneously, but some positions will be rejected. Efficient implementations handle this by:
-
-```
-  1. Fill KV cache for all K+1 positions
-  2. Accept the first n_accepted positions
-  3. Evict the rejected positions from KV cache
-  4. The bonus token (position K+1) is always kept
-
-  This requires careful cache management to avoid
-  recomputing the accepted positions' KV states.
-```
-
-**Batched speculative decoding:** For serving multiple requests, draft tokens can be batched across requests, and the target model verifies all batches in parallel:
-
-```
-  Request 1: [draft tokens x3]
-  Request 2: [draft tokens x5]
-  Request 3: [draft tokens x2]
-  ... padded to max K, verified in one target batch
-```
-
-**Asynchronous drafting:** Advanced implementations run the draft model continuously in the background as the target model processes previous rounds, hiding the draft's latency entirely.
-
-### 5. When Should You NOT Use Speculative Decoding?
-
-Speculative decoding is not universally beneficial:
-
-```
-❌ Low acceptance rate scenario:
-   Draft model is very different from target (e.g., different domain)
-   Acceptance rate drops below ~40% → speedup < 1.5x → not worth it
-   The draft model's compute + communication overhead exceeds savings.
-
-❌ Very short sequences:
-   If generating only 5-10 tokens, overhead dominates.
-   Speculative decoding shines at 100+ tokens.
-
-❌ Compute-bound workloads:
-   If the target model is already compute-saturated (large batch serving),
-   memory bandwidth is not the bottleneck, so speculative decoding helps less.
-
-❌ Non-autoregressive generation:
-   Speculative decoding relies on the autoregressive structure.
-   For masked LM or diffusion, different acceleration techniques are needed.
-```
-
----
+1. **Acceptance Rate Analysis**: Run the provided code with $K = 1, 2, 4, 8$ and plot the acceptance rate distribution. Does it match the theoretical expectation?
+2. **Temperature Sweep**: Systematically vary temperature from 0.1 to 2.0 and measure the effective speedup. Find the optimal temperature for your draft model.
+3. **Draft Model Comparison**: Implement Medusa-style multi-head drafting (single model, multiple output heads) and compare its acceptance rate to the separate-model approach.
+4. **Batched Speculative Decoding**: Modify the implementation to handle multiple prompts with different $K$ values in a single batch. Measure throughput improvement.
+5. **Adaptive K**: Implement a mechanism that dynamically adjusts $K$ based on the observed acceptance rate of the last 5 rounds. Compare against fixed-$K$ baseline.
 
 ## Further Reading
 
-- **Fast Inference from Transformers via Speculative Decoding** (Chen et al., 2023): https://arxiv.org/abs/2211.17192
-- **Medusa: Simple LLM Inference Acceleration Framework** (Cai et al., 2024): https://arxiv.org/abs/2401.10774
-- **Lookahead Decoding** (Fu et al., 2024): https://arxiv.org/abs/2402.02057
-- **EAGLE: Speculative Sampling with Feature-Based Drafting** (Li et al., 2024): https://arxiv.org/abs/2406.16858
-- **Speculative Decoding: A Survey** (comprehensive review): https://arxiv.org/abs/2409.15385
+| Paper | Authors | Year | Key Contribution |
+|---|---|---|---|
+| [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192) | Chen et al. | 2022 | Original spec decoding algorithm with proof |
+| [Medusa: Simple LLM Inference Acceleration](https://arxiv.org/abs/2401.10774) | Cai et al. | 2024 | Multi-head speculative decoding |
+| [EAGLE: Feature-Based Speculative Sampling](https://arxiv.org/abs/2406.16858) | Li et al. | 2024 | Feature-based draft without separate model |
+| [Lookahead Decoding](https://arxiv.org/abs/2402.02057) | Fu et al. | 2024 | N-gram cache based decoding acceleration |
+| [Speculative Decoding: A Survey](https://arxiv.org/abs/2409.15385) | Various | 2024 | Comprehensive review of all methods |
 
 ---
 

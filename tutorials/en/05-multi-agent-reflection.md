@@ -1,628 +1,644 @@
-# Day 05: Multi-Agent Reflection
+---
+date: "2026-04-03"
+difficulty: "Advanced"
+category: "Multi-Agent Systems"
+---
 
-## Table of Contents
+# Day 05: Multi-Agent Reflection -- Planner-Executor-Verifier, Reflexion, and Debate
 
-- Overview
-- Why Multi-Agent > Single-Agent
-- Reflexion: The Foundation
-- PEV Architecture (Planner-Executor-Verifier)
-- Debate Architecture
-- Comparison: Architecture Patterns
-- Code Examples
-- ASCII Flowcharts
-- Practical Design Patterns
-- Further Reading
-- Exercises
+> **Watch the animation**: ![Multi-Agent Reflection Animation](../gifs/05-multi-agent-reflection.gif)
 
 ---
 
-## Overview
+## One-Line Summary
 
-**Multi-agent reflection** takes the self-correction idea from Day 04 and distributes it across multiple specialized agents, each playing a distinct role. Instead of one model trying to generate, critique, and revise its own work, we deploy a team of agents: one to plan, one to execute, one to verify, one to debate — and let them collaborate, challenge, and refine each other.
-
-**Key insight:** Multi-agent systems consistently outperform single-agent approaches on complex tasks because they:
-
-1. **Separate concerns** — each agent specializes in one cognitive function.
-2. **Avoid self-bias** — an independent critic catches errors the generator missed.
-3. **Enable structured disagreement** — debate surfaces flaws that consensus would hide.
-4. **Scale compute compositionally** — add agents only where the task is hardest.
+Multi-agent reflection distributes cognitive labor across specialized agents -- a Planner decomposes tasks, an Executor produces outputs, a Verifier checks correctness, and a Debate system resolves disagreements -- achieving higher accuracy on complex reasoning tasks than any single agent, with architectures like Reflexion (Shinn et al. 2023), MetaGPT (Hong et al. 2023), and Chain-of-Verification (Dhuliawala et al. 2023).
 
 ---
 
-## Why Multi-Agent > Single-Agent
+## Why This Matters
 
-The core hypothesis driving multi-agent research is that **division of cognitive labor** outperforms asking a single model to do everything.
+### The Single-Agent Limit
 
-| Dimension | Single Agent | Multi-Agent | Why Multi-Agent Wins |
-|-----------|-------------|-------------|---------------------|
-| Role confusion | One prompt must handle all roles | Each agent has a focused prompt | Focused prompts = fewer errors |
-| Self-bias | Model evaluates its own output | Independent critic provides detachment | External eyes catch blind spots |
-| Error propagation | Errors compound silently | Verification stops bad branches | Checkpoints prevent cascade failures |
-| Scalability | One pass of N tokens = fixed compute | Add agents to scale compute where needed | Targeted resource allocation |
-| Perspectival diversity | Single viewpoint | Multiple viewpoints via debate | Adversarial testing improves robustness |
-| Auditability | Black box pipeline | Each agent's output is visible | Easier debugging and analysis |
+A single LLM must simultaneously generate, critique, and revise its own output. This creates three fundamental problems:
 
-### The "Blind Spot" Problem
+1. **Self-bias**: Models struggle to identify errors in their own reasoning because the same generative process produced both the answer and the critique.
+2. **Role confusion**: One prompt attempting to cover planning, execution, and verification inevitably makes trade-offs that weaken each function.
+3. **Error compounding**: Without an independent checkpoint, hallucinations and logical errors propagate unchecked through the entire pipeline.
 
-A single LLM has coherent but systematic biases. When asked to critique its own answer, it often:
-- Fails to notice its own errors (self-consistent but wrong).
-- Hallucinates problems that don't exist.
-- Is overly lenient on its own reasoning.
+### Multi-Agent's Core Insight
 
-A **separate critic agent**, especially with a different system prompt or different model variant, does not share the same reasoning path and therefore catches different error types.
+Multi-agent reflection asks: *Can we get better results by assigning distinct cognitive roles to separate agents, each with a focused system prompt and independent reasoning path?*
+
+The answer is a strong yes. By separating generation from evaluation, and by introducing adversarial debate among agents, we create a system that catches errors a single model would miss, plans more carefully, and produces outputs that are more robust and verifiable.
 
 ---
 
-## Reflexion: The Foundation
+## Architecture Walkthrough
 
-Reflexion is the simplest multi-agent architecture — and the bridge between single-agent self-correction and full multi-agent systems.
+```mermaid
+flowchart TD
+    Task["Task / Question"] --> Planner
 
-### Architecture
+    subgraph PEV["PEV Architecture"]
+        direction TB
+        Planner["Planner Agent\nDecompose & strategize"] --> Plan["Execution Plan\nStep 1, Step 2, ..."]
+        Plan --> Executor["Executor Agent\nProduce outputs per step"]
+        Executor --> Output["Intermediate Output"]
+        Output --> Verifier["Verifier Agent\nCheck correctness"]
+        Verifier -->|Pass| Final["Final Answer"]
+        Verifier -->|Fail: feedback| Planner
+    end
 
+    Verifier -->|Revision request| Executor
+    Executor --> Verifier
 ```
-  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-  │   Generator   │────►│   Critic      │────►│   Refiner    │
-  │   (Agent 1)   │     │   (Agent 2)   │     │   (Agent 3)  │
-  └──────────────┘     └──────────────┘     └──────┬───────┘
-        ▲                                          │
-        │        ┌──────────────┐                  │
-        └────────│   Done?      │◄─────────────────┘
-                 └──────┬───────┘
-                    Yes │
-                        ▼
-                 ┌──────────────┐
-                 │   Output     │
-                 └──────────────┘
+
+---
+
+## Reflexion Architecture
+
+```mermaid
+flowchart LR
+    subgraph Reflexion["Reflexion Loop (Shinn et al. 2023)"]
+        direction TB
+        A["Generate\nInitial Attempt"] --> B["Evaluate\nwith Verifier"]
+        B -->|Pass| C["Done ✓"]
+        B -->|Fail| D["Extract\nVerbal Reflection"]
+        D --> E["Append Reflection\nto Context"]
+        E --> A
+    end
 ```
 
 ### Key Design Decisions
 
 | Decision | Options | Trade-offs |
-|----------|---------|------------|
-| Same model vs. different model | Use identical LLM with different prompts, or different LLMs entirely | Different models = more diverse critique |
-| Shared memory | All agents access a shared context, or pass messages through a controller | Shared = richer context, but more tokens used |
-| Termination | Fixed rounds, agreement-based, or confidence threshold | Agreement = better quality, but risk of infinite loops |
-| Memory of past failures | Store critique history for future use, or start fresh each time | History = prevents repeated mistakes |
-
----
-
-## PEV Architecture (Planner-Executor-Verifier)
-
-The **Planner-Executor-Verifier (PEV)** pattern is the most widely used multi-agent workflow for complex tasks. It decomposes a problem into three distinct phases, each handled by a specialized agent.
-
-### ASCII Flowchart
-
-```
-                    ┌────────────────┐
-                    │     Task       │
-                    └───────┬────────┘
-                            │
-               ┌────────────▼────────────┐
-               │                         │
-               │   PLANNER (Agent 1)     │
-               │   "How should I solve   │
-               │    this? What are the   │
-               │    sub-steps?"          │
-               │                         │
-               └────────────┬────────────┘
-                            │
-                    ┌───────▼───────┐
-                    │   Decomposed  │
-                    │    Plan       │
-                    └───────┬───────┘
-                            │
-               ┌────────────▼────────────┐
-               │                         │
-               │  EXECUTOR (Agent 2)     │
-               │   "I'll carry out each  │
-               │    step and collect     │
-               │    intermediate results │
-               │    and the final answer │
-               │                         │
-               └────────────┬────────────┘
-                            │
-                    ┌───────▼───────┐
-                    │  Raw Result   │
-                    │  + Trace      │
-                    └───────┬───────┘
-                            │
-               ┌────────────▼────────────┐
-               │                         │
-               │   VERIFIER (Agent 3)    │
-               │   "Is this correct?     │
-               │    Does the logic hold? │
-               │    Any gaps in the      │
-               │    reasoning chain?"    │
-               │                         │
-               └────────────┬────────────┘
-                            │
-                    ┌───────▼───────┐
-                    │  Verdict:     │
-                    │  PASS / FAIL  │
-                    └───────┬───────┘
-               PASS ────────┘ ├────── FAIL
-                              │
-                    ┌─────────▼─────────┐
-                    │  Plan sent back   │
-                    │  to PLANNER for   │
-                    │  revision         │
-                    └─────────┬─────────┘
-                              │
-           (loop until PASS or max iterations)
-```
-
-### Agent Roles
-
-| Agent | System Prompt Focus | Input | Output |
-|-------|-------------------|-------|--------|
-| Planner | "Break down complex problems into executable steps. Be systematic." | Raw task | Step-by-step plan |
-| Executor | "Follow the plan precisely. Collect all intermediate results." | Plan | Executed result + trace |
-| Verifier | "Check every step for logical consistency. Identify specific errors." | Plan + result + trace | Pass/Fail + detailed critique |
-
-### Code Example
-
-```python
-class PlannerAgent:
-    def __init__(self, model):
-        self.model = model
-    
-    def plan(self, task):
-        prompt = (
-            "You are a planning expert. Break this task into clear, "
-            "sequential steps. Each step should be independently executable.\n\n"
-            f"Task: {task}\n\n"
-            "Steps:\n"
-            "1. "
-        )
-        response = self.model.complete(prompt)
-        # Parse numbered steps
-        steps = [line.strip() for line in response.split("\n") 
-                 if line.strip() and line.strip()[0].isdigit()]
-        return steps
-
-class ExecutorAgent:
-    def __init__(self, model):
-        self.model = model
-    
-    def execute(self, task, plan):
-        results = []
-        for i, step in enumerate(plan):
-            prompt = (
-                f"Task: {task}\n"
-                f"Current step ({i+1}/{len(plan)}): {step}\n"
-                f"Previous results: {results}\n\n"
-                f"Execute this step and return your result:\n"
-            )
-            result = self.model.complete(prompt)
-            results.append(result)
-        return {
-            "steps": plan,
-            "results": results,
-            "final_answer": results[-1] if results else None
-        }
-
-class VerifierAgent:
-    def __init__(self, model):
-        self.model = model
-    
-    def verify(self, task, plan, execution):
-        prompt = (
-            "You are a rigorous verifier. Review this solution critically.\n\n"
-            f"Task: {task}\n"
-            f"Plan: {plan}\n"
-            f"Execution trace: {execution}\n\n"
-            "For each step, check:\n"
-            "1. Is the step logically sound?\n"
-            "2. Are the calculations correct?\n"
-            "3. Does the final answer follow from the steps?\n\n"
-            "Respond with PASS or FAIL, followed by your reasoning.\n"
-            "Verdict: "
-        )
-        response = self.model.complete(prompt)
-        
-        verdict = "PASS" if response.upper().startswith("PASS") else "FAIL"
-        critique = response.split("\n", 1)[1].strip() if "\n" in response else response
-        
-        return verdict, critique
-
-class PEVSystem:
-    def __init__(self, planner, executor, verifier, max_iterations=3):
-        self.planner = planner
-        self.executor = executor
-        self.verifier = verifier
-        self.max_iterations = max_iterations
-    
-    def solve(self, task):
-        plan = self.planner.plan(task)
-        iteration = 0
-        
-        while iteration < self.max_iterations:
-            execution = self.executor.execute(task, plan)
-            verdict, critique = self.verifier.verify(task, plan, execution)
-            
-            if verdict == "PASS":
-                return execution
-        
-            if verdict == "FAIL":
-                # Revise plan based on critique
-                plan = self._revise_plan(task, plan, critique)
-            
-            iteration += 1
-        
-        raise RuntimeError(f"Failed after {self.max_iterations} iterations")
-    
-    def _revise_plan(self, task, old_plan, critique):
-        prompt = (
-            f"Revise the plan based on this critique.\n"
-            f"Task: {task}\n"
-            f"Current Plan: {old_plan}\n"
-            f"Critique: {critique}\n\n"
-            "Revised numbered plan:\n1. "
-        )
-        response = self.planner.model.complete(prompt)
-        return [line.strip() for line in response.split("\n")
-                if line.strip() and line.strip()[0].isdigit()]
-```
+|---|---|---|
+| Same model vs different model | Identical LLM with different prompts, or different LLMs | Different models yield more diverse critique but cost more |
+| Shared memory | All agents access shared context, or pass messages via controller | Shared memory = richer context but more tokens |
+| Termination | Fixed rounds, agreement-based, or confidence threshold | Agreement = better quality but risk of infinite loops |
+| Failure memory | Store critique history for future, or start fresh each time | History prevents repeated mistakes, adds latency |
 
 ---
 
 ## Debate Architecture
 
-Debate introduces **adversarial reasoning** — two or more agents argue opposing positions, and a judge agent determines the winner. This forces each agent to strengthen its arguments and exposes weak reasoning.
+```mermaid
+flowchart TD
+    Question["Question"] --> A1["Agent 1\nIndependent reasoning"]
+    Question --> A2["Agent 2\nIndependent reasoning"]
+    Question --> A3["Agent 3\nIndependent reasoning"]
 
-### ASCII Flowchart
+    A1 --> Judge["Judge / Aggregator\nEvaluates all answers"]
+    A2 --> Judge
+    A3 --> Judge
 
-```
-  ┌──────────────────────────────────────────────────────────┐
-  │                     QUESTION / TASK                      │
-  └─────────────────────────┬────────────────────────────────┘
-                            │
-              ┌─────────────┼─────────────┐
-              │             │             │
-      ┌───────▼──────┐     ...   ┌───────▼──────┐
-      │   Arguer A   │           │   Arguer B   │
-      │   (Position  │           │   (Position  │
-      │    X)        │           │    Y)        │
-      └───────┬──────┘           └───────┬──────┘
-              │                          │
-      ┌───────▼──────┐           ┌───────▼──────┐
-      │  Counter A   │  ◄─────►  │  Counter B   │
-      │  (rebuttal)  │           │  (rebuttal)  │
-      └───────┬──────┘           └───────┬──────┘
-              │      K rounds of          │
-              │      cross-examination    │
-              └──────────┬───────────────┘
-                         │
-               ┌─────────▼──────────┐
-               │      JUDGE         │
-               │  (evaluates both   │
-               │   argument chains, │
-               │   picks winner)    │
-               └─────────┬──────────────┘
-                         │
-              ┌──────────▼──────────────┐
-              │   Winning Argument      │
-              │   = Final Answer        │
-              └─────────────────────────┘
+    Judge -->|Consensus or voting| Final["Final Answer"]
+
+    subgraph Round2["Multi-Round Debate (optional)"]
+        Final --> R1["Agent 1 revises\ngiven others answers"]
+        Final --> R2["Agent 2 revises\ngiven others answers"]
+        Final --> R3["Agent 3 revises\ngiven others answers"]
+        R1 --> Judge2["Judge re-evaluates"]
+        R2 --> Judge2
+        R3 --> Judge2
+        Judge2 -->|"After K rounds"| Output["Final Answer"]
+    end
 ```
 
-### Debate Flow
+### PEV vs Debate Comparison
 
-1. **Setup:** The question is presented to two (or more) agents.
-2. **Opening statements:** Each agent presents its initial position.
-3. **Rebuttals:** Agents counter each other's arguments for K rounds.
-4. **Closing:** Agents give final summaries.
-5. **Judgment:** A judge agent reads all arguments and selects the most convincing.
-
-### When Debate Works Best
-
-| Scenario | Why Debate Helps |
-|----------|-----------------|
-| Multiple plausible answers | Forces comparison of alternatives |
-| Ambiguous tasks | Different perspectives reveal hidden assumptions |
-| Safety-critical decisions | Adversarial testing reduces false confidence |
-| Factual disputes | Cross-checking claims catches hallucinations |
-
-### Code Example
-
-```python
-class Debate:
-    def __init__(self, model, agent_a_system=None, 
-                 agent_b_system=None, judge_system=None,
-                 rounds=3):
-        self.model = model
-        self.agent_a_system = agent_a_system or "Present the strongest argument for one side."
-        self.agent_b_system = agent_b_system or "Present the strongest counter-argument."
-        self.judge_system = judge_system or "Objectively evaluate both arguments. Pick the better one."
-        self.rounds = rounds
-    
-    def run(self, question):
-        log = []
-        
-        # Opening statements
-        arg_a = self._get_response(self.agent_a_system, question, log)
-        arg_b = self._get_response(self.agent_b_system, question, log)
-        log.append({"speaker": "A", "argument": arg_a, "round": "opening"})
-        log.append({"speaker": "B", "argument": arg_b, "round": "opening"})
-        
-        # Debate rounds
-        for r in range(1, self.rounds + 1):
-            rebut_a = self._get_response(
-                self.agent_a_system, question, log
-            )
-            rebut_b = self._get_response(
-                self.agent_b_system, question, log
-            )
-            log.append({"speaker": "A", "argument": rebut_a, "round": r})
-            log.append({"speaker": "B", "argument": rebut_b, "round": r})
-        
-        # Judgment
-        verdict = self._judge(question, log)
-        
-        return {
-            "verdict": verdict,
-            "winner": verdict["winner"],
-            "log": log
-        }
-    
-    def _get_response(self, system_prompt, question, history):
-        context = "\n".join(
-            f"[{entry['speaker']} Round {entry['round']}]: {entry['argument']}"
-            for entry in history
-        )
-        prompt = f"{system_prompt}\n\nQuestion: {question}\n\nHistory:\n{context}\n\nYour response:"
-        return self.model.complete(prompt)
-    
-    def _judge(self, question, log):
-        transcript = "\n".join(
-            f"[Speaker {entry['speaker']} Round {entry['round']}]: {entry['argument']}"
-            for entry in log
-        )
-        prompt = (
-            f"{self.judge_system}\n\n"
-            f"Question: {question}\n\n"
-            f"Full transcript:\n{transcript}\n\n"
-            "Which speaker presented the stronger argument?\n"
-            "Respond with 'A' or 'B' followed by your reasoning.\n"
-            "Verdict: "
-        )
-        response = self.model.complete(prompt)
-        
-        winner = "A" if response.strip().upper().startswith("A") else "B"
-        reasoning = response.strip()
-        
-        return {"winner": winner, "reasoning": reasoning}
-```
-
-### Debate Variants
-
-| Variant | Description | Use Case |
-|---------|-------------|----------|
-| Fixed-side debate | Agents are assigned positions (Pro/Con) | Factual verification |
-| Free-sides debate | Agents independently form positions | Open-ended reasoning |
-| N-agent debate | 3+ agents with different viewpoints | Complex policy questions |
-| Expertise-weighted | Each agent has a different domain system prompt | Cross-domain problems |
-| Self-debate | Same model, two different system prompts | When only one model is available |
+| Dimension | PEV | Debate |
+|---|---|---|
+| Structure | Sequential pipeline (Plan → Execute → Verify) | Parallel generation + aggregation |
+| Agent roles | Distinct and asymmetric | Symmetric, all agents play same role |
+| Best for | Complex multi-step tasks requiring planning | Questions where diverse viewpoints matter |
+| Compute pattern | Sequential agents, each depends on prior | Parallel agents, then aggregation |
+| Error recovery | Verifier loops back to Planner | Judge picks best, or agents revise |
+| Key paper | MetaGPT (2308.00352) | LLM Debate (2305.14333) |
 
 ---
 
-## Comparison: Architecture Patterns
+## Chain-of-Verification (CoVe)
 
-| Pattern | Agents | Communication | Best For | Complexity |
-|---------|--------|-------------|----------|------------|
-| Reflexion | 2 (Generator + Critic) | Sequential | Code review, writing | Low |
-| PEV | 3 (Planner + Executor + Verifier) | Sequential with feedback loop | Complex multi-step tasks | Medium |
-| Debate | 2+ Agents + Judge | Bidirectional rebuttals | Ambiguous questions, fact-checking | Medium |
-| Multi-Agent Team | 4+ with specialized roles | Mixed (sequential + parallel) | Full pipeline (research → write → review → publish) | High |
-| AutoGen-style Conversational | N agents | Free-form conversation | Open-ended collaboration | High |
+```mermaid
+flowchart LR
+    Draft["Draft\nwith Answers"] --> GenQ["Generate\nVerification Questions"]
+    GenQ --> AnswerQ["Answer Questions\nIndependently"]
+    AnswerQ --> Revise["Revise Draft\nbased on answers"]
+```
+
+Chain-of-Verification (Dhuliawala et al., 2023) follows four steps:
+
+1. **Generate a draft** response that may contain factual errors.
+2. **Plan verification questions** that would check each claim in the draft.
+3. **Execute verification** by answering each question independently from the draft (prevents the model from just repeating its own hallucinations).
+4. **Generate a revised response** incorporating the verification results.
+
+This is particularly effective at reducing hallucination because Step 3 forces the model to independently verify claims rather than re-deriving them from the same faulty reasoning path.
 
 ---
 
-## Code Examples
+## Mathematical Formulation
 
-### Multi-Agent Orchestrator with Shared Memory
+### Reflexion Reward Model
+
+Reflexion can be formalized as a policy improvement loop where the policy conditions on accumulated reflection history:
+
+$$
+\pi_\theta(a_t \mid s_t, h_t) \quad \text{where} \quad h_t = \{r_1, r_2, \ldots, r_{t-1}\}
+$$
+
+And each reflection $r_t$ is a function of the failure signal:
+
+$$
+r_t = \text{Reflect}(s_t, a_t, \text{feedback}_t)
+$$
+
+### Expected Improvement Over Rounds
+
+If the acceptance rate per round is $p$ (probability that the verifier accepts), the expected number of rounds until acceptance follows a geometric distribution:
+
+$$
+E[\text{rounds}] = \frac{1}{p}
+$$
+
+With $m$ independent agents in a debate and majority voting requiring $> m/2$ agreement, the probability of a correct final answer (assuming each agent has individual accuracy $a$) is:
+
+$$
+P(\text{correct}) = \sum_{k=\lfloor m/2 \rfloor + 1}^{m} \binom{m}{k} a^k (1-a)^{m-k}
+$$
+
+For $m=3$ and $a=0.7$:
+
+$$
+P(\text{correct}) = \binom{3}{2}(0.7)^2(0.3)^1 + \binom{3}{3}(0.7)^3(0.3)^0 = 3 \cdot 0.49 \cdot 0.3 + 0.343 = 0.441 + 0.343 = 0.784
+$$
+
+Majority voting improves accuracy from 70% to 78.4%.
+
+### Information-Theoretic Advantage
+
+The mutual information between the final answer and the ground truth increases with agent diversity:
+
+$$
+I(Y_{\text{final}}; Y^*) \geq \max_i I(Y_i; Y^*) \quad \text{when agents have uncorrelated errors}
+$$
+
+This shows that diverse agents (uncorrelated errors) provide strictly more information about the true answer than any single agent.
+
+---
+
+## Python Code Implementation
 
 ```python
-class Agent:
-    def __init__(self, name, system_prompt, model):
-        self.name = name
-        self.system_prompt = system_prompt
-        self.model = model
-    
-    def respond(self, prompt):
-        return self.model.complete(
-            f"{self.system_prompt}\n\n{prompt}"
-        )
+import numpy as np
+from dataclasses import dataclass, field
+from typing import Optional
 
-class SharedMemory:
-    def __init__(self):
-        self.messages = []
-    
-    def add(self, agent_name, content):
-        self.messages.append({
-            "agent": agent_name,
-            "content": content,
-        })
-    
-    def get_history(self):
-        return "\n".join(
-            f"[{m['agent']}]: {m['content']}" for m in self.messages
-        )
-    
-    def last(self, n=1):
-        return self.messages[-n:]
 
-class MultiAgentCollaboration:
-    def __init__(self, agents, memory=None, max_rounds=5):
-        self.agents = {a.name: a for a in agents}
-        self.memory = memory or SharedMemory()
+@dataclass
+class AgentMessage:
+    """A message passed between agents in a multi-agent system."""
+    sender: str
+    content: str
+    metadata: dict = field(default_factory=dict)
+
+
+AgentFn = callable  # Type alias for agent functions
+
+
+class ReflexionAgent:
+    """
+    Implements the Reflexion architecture (Shinn et al., 2023).
+
+    Alternates between generation and self-reflection, accumulating
+    verbal reflections in the context to improve future attempts.
+
+    Paper: arXiv:2303.11366
+    """
+
+    def __init__(
+        self,
+        generator: AgentFn,
+        reflector: AgentFn,
+        verifier: AgentFn,
+        max_rounds: int = 5,
+    ):
+        """
+        Initialize ReflexionAgent.
+
+        Args:
+            generator: Function(prompt, context) -> str, generates an attempt.
+            reflector: Function(prompt, attempt, feedback) -> str, produces reflection.
+            verifier: Function(prompt, attempt) -> tuple[bool, str], checks correctness.
+            max_rounds: Maximum number of reflection rounds.
+        """
+        self.generator = generator
+        self.reflector = reflector
+        self.verifier = verifier
         self.max_rounds = max_rounds
-    
-    def run(self, initial_task):
-        self.memory.add("SYSTEM", initial_task)
-        round_num = 0
-        
-        while round_num < self.max_rounds:
-            for name, agent in self.agents.items():
-                context = self.memory.get_history()
-                response = agent.respond(
-                    f"Context:\n{context}\n\n"
-                    f"Your turn to respond to: {initial_task}"
+
+    def run(self, prompt: str) -> tuple[str, list[str]]:
+        """
+        Run the Reflexion loop.
+
+        Args:
+            prompt: The input problem or question.
+
+        Returns:
+            final_answer: The accepted answer string.
+            reflections: List of all generated reflections.
+        """
+        context: list[str] = []
+        reflections: list[str] = []
+
+        for round_num in range(self.max_rounds):
+            # Generate attempt
+            context_block = "\n".join(context)
+            attempt = self.generator(prompt, context_block)
+
+            # Verify
+            passed, feedback = self.verifier(prompt, attempt)
+
+            if passed:
+                return attempt, reflections
+
+            # Reflect and accumulate failure memory
+            reflection = self.reflector(prompt, attempt, feedback)
+            reflections.append(reflection)
+            context.append(f"Reflection {round_num + 1}: {reflection}")
+
+        # Return best attempt if no round passed
+        return attempt, reflections
+
+
+class PEVSystem:
+    """
+    Planner-Executor-Verifier multi-agent architecture.
+
+    Decomposes a task into a plan, executes each step,
+    verifies the result, and loops back on failure.
+
+    Inspired by MetaGPT (arXiv:2308.00352).
+    """
+
+    def __init__(
+        self,
+        planner: AgentFn,
+        executor: AgentFn,
+        verifier: AgentFn,
+        max_retries: int = 3,
+    ):
+        """
+        Initialize PEVSystem.
+
+        Args:
+            planner: Function(task) -> list[str], produces a step-by-step plan.
+            executor: Function(task, plan, current_step, previous_outputs) -> str,
+                      executes one step.
+            verifier: Function(task, plan, outputs) -> tuple[bool, str],
+                      checks final result.
+            max_retries: Maximum number of planner-executor-verify cycles.
+        """
+        self.planner = planner
+        self.executor = executor
+        self.verifier = verifier
+        self.max_retries = max_retries
+
+    def run(self, task: str) -> tuple[str, dict]:
+        """
+        Run the PEV pipeline.
+
+        Args:
+            task: The problem to solve.
+
+        Returns:
+            final_output: The verified result.
+            trace: Dictionary containing plan, outputs, and verification history.
+        """
+        trace: dict = {
+            "plans": [],
+            "outputs": [],
+            "verifications": [],
+        }
+
+        for attempt in range(self.max_retries):
+            # Step 1: Plan
+            plan = self.planner(task)
+            trace["plans"].append(plan)
+
+            # Step 2: Execute each step
+            outputs: list[str] = []
+            for step_idx, step in enumerate(plan):
+                step_output = self.executor(
+                    task, plan, step_idx, outputs
                 )
-                self.memory.add(name, response)
-                
-                if self._should_terminate(response):
-                    return self._summarize()
-            
-            round_num += 1
-        
-        return self._summarize()
-    
-    def _should_terminate(self, latest_response):
-        # Simple termination: agent says "I agree" or "No further changes needed"
-        lower = latest_response.lower()
-        return ("no further changes" in lower or 
-                "i agree" in lower or 
-                "agreed" in lower)
-    
-    def _summarize(self):
-        return self.memory.get_history()
+                outputs.append(step_output)
+            trace["outputs"].append(outputs)
+
+            # Step 3: Verify
+            passed, feedback = self.verifier(task, plan, outputs)
+            trace["verifications"].append({"passed": passed, "feedback": feedback})
+
+            if passed:
+                return "\n".join(outputs), trace
+
+            # If failed, feed verifier feedback back to planner
+            # (the planner is expected to incorporate feedback into the next plan)
+
+        # Return last attempt even if not verified
+        return "\n".join(outputs), trace
+
+
+class DebateSystem:
+    """
+    Multi-agent debate system.
+
+    Multiple agents independently generate answers, a judge
+    aggregates them, and agents can revise based on others' answers.
+
+    Paper: arXiv:2305.14333 (LLM Debates Improve Reasoning)
+    """
+
+    def __init__(
+        self,
+        agents: list[AgentFn],
+        judge: callable,
+        num_rounds: int = 2,
+        voting: str = "majority",
+    ):
+        """
+        Initialize DebateSystem.
+
+        Args:
+            agents: List of agent functions, each(prompt, debate_history) -> str.
+            judge: Function(answers) -> str, selects or synthesizes final answer.
+            num_rounds: Number of debate rounds (1 = single-shot, >1 = multi-round).
+            voting: Aggregation strategy -- 'majority' or 'best'.
+        """
+        self.agents = agents
+        self.judge = judge
+        self.num_rounds = num_rounds
+        self.voting = voting
+
+    def run(self, prompt: str) -> tuple[str, list[list[str]]]:
+        """
+        Run the debate system.
+
+        Args:
+            prompt: The question or task.
+
+        Returns:
+            final_answer: The judge-selected or synthesized answer.
+            all_rounds: List of rounds, each round is a list of agent answers.
+        """
+        debate_history: list[str] = []
+        all_rounds: list[list[str]] = []
+
+        for round_num in range(self.num_rounds):
+            round_answers: list[str] = []
+
+            for agent_idx, agent in enumerate(self.agents):
+                # Each agent sees the debate history from prior rounds
+                agent_answer = agent(prompt, debate_history)
+                round_answers.append(agent_answer)
+
+            all_rounds.append(round_answers)
+
+            # Update debate history for next round
+            for idx, answer in enumerate(round_answers):
+                debate_history.append(f"Agent {idx} (Round {round_num + 1}): {answer}")
+
+        # Final judgment
+        final_answer = self.judge(all_rounds[-1])
+        return final_answer, all_rounds
+
+
+class ChainOfVerification:
+    """
+    Chain-of-Verification system.
+
+    Generates a draft, plans verification questions,
+    answers them independently, then revises.
+
+    Paper: arXiv:2309.11495
+    """
+
+    def __init__(
+        self,
+        drafter: AgentFn,
+        question_planner: AgentFn,
+        question_answerer: AgentFn,
+        reviser: AgentFn,
+    ):
+        """
+        Initialize ChainOfVerification.
+
+        Args:
+            drafter: Function(prompt) -> str, generates initial draft.
+            question_planner: Function(draft) -> list[str], generates verification questions.
+            question_answerer: Function(question) -> str, answers a question independently.
+            reviser: Function(draft, questions_and_answers) -> str, revises the draft.
+        """
+        self.drafter = drafter
+        self.question_planner = question_planner
+        self.question_answerer = question_answerer
+        self.reviser = reviser
+
+    def run(self, prompt: str) -> tuple[str, dict]:
+        """
+        Run the Chain-of-Verification pipeline.
+
+        Args:
+            prompt: The input question.
+
+        Returns:
+            final_answer: The revised, verified answer.
+            trace: Verification trace.
+        """
+        # Step 1: Generate draft
+        draft = self.drafter(prompt)
+
+        # Step 2: Plan verification questions
+        questions = self.question_planner(draft)
+
+        # Step 3: Answer each question independently
+        qa_pairs: list[dict] = []
+        for q in questions:
+            answer = self.question_answerer(q)
+            qa_pairs.append({"question": q, "answer": answer})
+
+        # Step 4: Revise based on verification
+        revised = self.reviser(draft, qa_pairs)
+
+        trace = {
+            "draft": draft,
+            "verification_questions": questions,
+            "qa_pairs": qa_pairs,
+            "revised": revised,
+        }
+
+        return revised, trace
+
+
+# ------------------------------------------------------------------
+# Example usage with mock agents
+# ------------------------------------------------------------------
+if __name__ == "__main__":
+
+    # ---- Mock agents for Reflexion ----
+    def mock_generator(prompt: str, context: str) -> str:
+        if context:
+            return "The answer is 42 (revised after reflection)."
+        return "The answer is 41."
+
+    def mock_reflector(prompt: str, attempt: str, feedback: str) -> str:
+        return f"Error in '{attempt}': off by 1. Need to check boundary conditions."
+
+    def mock_verifier(prompt: str, attempt: str) -> tuple[bool, str]:
+        if "42" in attempt:
+            return True, "Correct."
+        return False, f"Incorrect. Got '{attempt}'."
+
+    agent = ReflexionAgent(
+        generator=mock_generator,
+        reflector=mock_reflector,
+        verifier=mock_verifier,
+        max_rounds=5,
+    )
+    answer, reflections = agent.run("What is 6 * 7?")
+    print(f"Reflexion final answer: {answer}")
+    print(f"Reflections: {reflections}")
+    print()
+
+    # ---- Mock agents for Debate ----
+    def mock_agent_1(prompt: str, history: list[str]) -> str:
+        return "Answer A: 42"
+
+    def mock_agent_2(prompt: str, history: list[str]) -> str:
+        return "Answer B: 42"
+
+    def mock_agent_3(prompt: str, history: list[str]) -> str:
+        return "Answer C: 43"
+
+    def mock_judge(answers: list[str]) -> str:
+        # Simple majority vote
+        from collections import Counter
+        # Strip "Answer X: " prefix
+        stripped = [a.split(": ")[1] if ": " in a else a for a in answers]
+        counts = Counter(stripped)
+        return counts.most_common(1)[0][0]
+
+    debate = DebateSystem(
+        agents=[mock_agent_1, mock_agent_2, mock_agent_3],
+        judge=mock_judge,
+        num_rounds=2,
+        voting="majority",
+    )
+    final, rounds = debate.run("What is 6 * 7?")
+    print(f"Debate final answer: {final}")
+    print(f"Round 1 answers: {rounds[0]}")
+    print(f"Round 2 answers: {rounds[1]}")
+    print()
+
+    # ---- Chain-of-Verification ----
+    def mock_drafter(prompt: str) -> str:
+        return "The capital of France is London."
+
+    def mock_question_planner(draft: str) -> list[str]:
+        return ["What is the capital of France?"]
+
+    def mock_question_answerer(question: str) -> str:
+        if "capital of France" in question:
+            return "Paris"
+        return "Unknown"
+
+    def mock_reviser(draft: str, qa_pairs: list[dict]) -> str:
+        for qa in qa_pairs:
+            draft = draft.replace("London", qa["answer"])
+        return draft
+
+    cove = ChainOfVerification(
+        drafter=mock_drafter,
+        question_planner=mock_question_planner,
+        question_answerer=mock_question_answerer,
+        reviser=mock_reviser,
+    )
+    revised, trace = cove.run("What is the capital of France?")
+    print(f"CoVe final answer: {revised}")
+    print(f"Draft was: {trace['draft']}")
 ```
 
 ---
 
-## ASCII Flowcharts
+## Deep Dive
 
-### Complete Multi-Agent System with Reflexion Loop
+### The "Blind Spot" Problem
 
-```
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │                          TASK INPUT                                 │
-  └──────────────────────────────┬──────────────────────────────────────┘
-                                 │
-                  ┌──────────────▼──────────────┐
-                  │        PLANNER              │
-                  │   "Decompose the problem"   │
-                  └──────────────┬──────────────┘
-                                 │
-            ┌────────────────────┼────────────────────┐
-            │                    │                    │
-    ┌───────▼──────┐    ┌───────▼──────┐    ┌───────▼──────┐
-    │  Sub-task 1  │    │  Sub-task 2  │    │  Sub-task 3  │
-    │  EXECUTOR    │    │  EXECUTOR    │    │  EXECUTOR    │
-    └───────┬──────┘    └───────┬──────┘    └───────┬──────┘
-            │                   │                   │
-            └────────────────────┼───────────────────┘
-                                 │
-                  ┌──────────────▼──────────────┐
-                  │        VERIFIER             │
-                  │   "Check all solutions"     │
-                  └──────────────┬──────────────┘
-                                 │
-                    ┌────────────┼────────────┐
-                FAIL │         PASS            │
-                    ▼            │             │
-           ┌──────────────┐     │             │
-           │   REFLECT:   │     │             │
-           │  What went   │     │             │
-           │  wrong? Why? │     │             │
-           └──────┬───────┘     │             │
-                  │ send back   │             │
-           ┌──────▼──────┐      │             │
-           │   PLANNER   │      │             │
-           │  revision   │      │             │
-           └─────────────┘      │             │
-                                ▼             ▼
-                  ┌───────────────┬──────────────┐
-                  │         FINAL OUTPUT          │
-                  └───────────────────────────────┘
-```
+A single LLM has coherent but systematic biases. When asked to critique its own answer, it often:
+- Fails to notice its own errors (self-consistent but wrong).
+- Hallucinates problems that do not exist.
+- Is overly lenient on its own reasoning.
+
+A **separate critic agent**, especially with a different system prompt or different model variant, does not share the same reasoning path and therefore catches different error types.
+
+### Agent Communication Patterns
+
+| Pattern | Topology | Pros | Cons |
+|---|---|---|---|
+| Pipeline | A → B → C | Simple, deterministic | No loops, brittle |
+| Star | Hub connects all agents | Centralized control | Hub is bottleneck |
+| Mesh | All agents communicate | Maximum information sharing | O(n²) messages |
+| Tree | Hierarchical delegation | Scales well, natural delegation | Root can be bottleneck |
+
+### Cost vs Quality Trade-off
+
+Multi-agent systems trade latency and cost for output quality. The decision to use multi-agent vs single-agent should be guided by:
+- **Task complexity**: Multi-step, high-stakes tasks benefit most.
+- **Error tolerance**: Low-tolerance domains (medical, legal, finance) benefit from verification.
+- **Latency budget**: Each agent adds a full LLM call, multiplying latency.
+- **Agent diversity benefit**: If agents are too similar, returns diminish quickly.
 
 ---
 
-## Practical Design Patterns
+## Common Misconceptions
 
-### Pattern 1: Critic-Only Multi-Agent
-
-```
-Task → Generator → Critic → [Fix?] 
-                            ├── Yes → Output
-                            ├── No  → Generator (revised)
-```
-
-**When to use:** Code review, essay grading, translation quality checks.
-
-### Pattern 2: Pipeline with Checkpoints
-
-```
-Step 1 (Agent A) → Verify → Step 2 (Agent B) → Verify → Step 3 (Agent C) → Output
-                       │                           │                          │
-                    [FAIL]                      [FAIL]                    [FAIL]
-                       │                           │                          │
-                    Agent A retry            Agent B retry             Agent C retry
-```
-
-**When to use:** Data processing pipelines, multi-step reasoning, software development.
-
-### Pattern 3: Consensus Voting
-
-```
-Task → [Agent 1] ──┐
-     → [Agent 2] ──┤ → Majority vote → Output
-     → [Agent 3] ──┘     (or weighted)
-```
-
-**When to use:** Classification, factual QA, when you need robustness through diversity.
-
-### Pattern 4: Adversarial Debate
-
-```
-Task → [Pro Agent] ←→ [Con Agent] → Judge → Winning argument → Output
-```
-
-**When to use:** Decision-making with tradeoffs, policy analysis, ethical reasoning.
-
----
-
-## Further Reading
-
-1. **"Reflexion: Language Agents with Verbal Reinforcement Learning"** — Shinn et al. (2023) — https://arxiv.org/abs/2303.11366
-   Foundational paper introducing self-reflection with verbal reward signals for RL in LLM agents.
-
-2. **"Multi-Agent Consensus: Improving LLM Reasoning through Group Collaboration"** — Liang et al. (2023) — https://arxiv.org/abs/2305.14325
-   Demonstrates that multi-agent consensus outperforms single-agent reasoning.
-
-3. **"ChatDev: Communicative Agents for Software Development"** — Qian et al. (2023) — https://arxiv.org/abs/2307.07924
-   Full multi-agent pipeline for software engineering with specialized roles.
-
-4. **"AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation"** — Wu et al. (2023) — https://arxiv.org/abs/2308.08155
-   Framework for building multi-agent conversational systems.
-
-5. **"The AI Scientist: Towards Fully Automated Open-Ended Scientific Discovery"** — Lu et al. (2024) — https://arxiv.org/abs/2408.06292
-   Multi-agent system for automated scientific research.
-
-6. **"Judging LLM-as-a-Judge with MT-Bench"** — Zheng et al. (2023) — https://arxiv.org/abs/2306.05685
-   Research on using LLMs as evaluators in multi-agent systems.
-
-7. **"Language Models as Zero-Shot Planners"** — Huang et al. (2022) — https://arxiv.org/abs/2201.07207
-   Foundational work on LLMs as planners in multi-step reasoning.
+| Misconception | Reality |
+|---|---|
+| "More agents = always better" | Beyond ~5 agents, marginal gains shrink; diversity matters more than count |
+| "Any LLM can be an agent" | Agent role requires specific prompting; not all models are equally good at planning vs generating vs critiquing |
+| "Multi-agent eliminates hallucination" | Multi-agent reduces but does not eliminate hallucination; verification can also hallucinate |
+| "Debate always produces consensus" | Agents can reinforce shared biases; structured debate rules are essential |
+| "Reflexion requires training" | Original Reflexion uses only prompting; no fine-tuning needed |
 
 ---
 
 ## Exercises
 
-1. **Build a PEV System:** Create a Planner-Executor-Verifier pipeline for solving word math problems. The planner should decompose the problem, the executor should solve it step-by-step, and the verifier should check if the solution is mathematically sound.
+1. **Implement a Reflexion loop for code generation**: Build a ReflexionAgent where the verifier runs the generated code in a sandbox and the reflector analyzes error messages. Measure how many rounds are needed to fix syntax vs logical errors.
 
-2. **Debate on Ambiguous Questions:** Set up a two-agent debate on an intentionally ambiguous questions, such as "Is social media good for society?" Use a third judge agent to evaluate. Compare results with a single-agent response.
+2. **Build a PEV system for math word problems**: The planner decomposes the problem, the executor solves each sub-problem, and the verifier checks units, ranges, and logical consistency. Compare accuracy against a single-shot LLM.
 
-3. **Implement Reflexion for Code:** Create a generator-critic loop for code generation. The generator writes Python code, the critic reviews it for bugs and edge cases, and the generator revises. Test on LeetCode Easy problems.
+3. **Experiment with debate round count**: Implement a debate system with 1, 2, 3, and 5 rounds. Track how answer quality changes with more rounds. Does quality saturate or continue improving?
 
-4. **Consensus Benchmark:** Generate 5 independent answers to the same question using 5 agents with slightly different system prompts. Compare consensus (majority vote) versus single-agent accuracy on a set of 20 trivia questions.
+4. **Cross-model debate**: Assign different models (e.g., GPT-4o, Claude 3.5, LLaMA 3) to debate roles. Does model diversity improve debate quality, or does it cause communication breakdown?
 
-5. **Agent Memory Experiment:** Run a multi-agent system once with shared memory and once without. Compare how well the system handles follow-up questions in both configurations.
-
-6. **Cost Analysis:** Calculate the token cost for each architecture (single-agent, reflexion, PEV, debate) on the same task. Plot accuracy versus cost to find the Pareto frontier.
+5. **CoVe vs Reflexion comparison**: Implement both Chain-of-Verification and Reflexion on the same QA dataset. Which approach reduces hallucination more effectively? When does each approach fail?
 
 ---
 
-*Day 05 Tutorial — Advanced AI Daily*
+## References
+
+| Paper | arXiv | Key Contribution |
+|---|---|---|
+| Reflexion: Language Agents with Verbal Reinforcement Learning | 2303.11366 | Self-reflection loop with verbal feedback accumulation |
+| MetaGPT: Meta Programming for Multi-Agent Collaborative Framework | 2308.00352 | PEV-style multi-agent software development |
+| LLM Debates: Improving Reasoning through Multi-Agent Discussion | 2305.14333 | Multi-agent debate improves reasoning accuracy |
+| Chain-of-Verification: Reducing Hallucination in LLMs | 2309.11495 | Self-verification via independent question answering |
+
+---
+
+## Navigation
+
+[[Day 04: Test-Time Compute]](04-test-time-compute.md) | **Day 05: Multi-Agent Reflection** | [[Day 06: Quantization]](06-quantization.md)
