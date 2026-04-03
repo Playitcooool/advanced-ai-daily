@@ -1,187 +1,183 @@
-# GRPO - Group Relative Policy Optimization
+# Day 01: GRPO -- Group Relative Policy Optimization
+# 第 01 天: GRPO 组相对策略优化
 
-> **日期**: 2026-04-03 | **难度**: 进阶 | **类别**: 强化学习 / LLM 对齐
+> **Date**: 2026-04-03 | **Difficulty**: Advanced | **Category**: Reinforcement Learning
 
----
-
-## 一句话总结
-
-GRPO 是一种不需要 Value Network（Critic）的 RL 算法，通过对同一问题生成多个回答并比较组内相对优劣来更新策略。它是 PPO 的简化版，也是 DeepSeek-R1 使用的核心训练方法。
+> **Watch the animation**: ![GRPO Animation](../gifs/01-grpo.gif)
 
 ---
 
-## 为什么需要 GRPO?
+## One-Line Summary
 
-### PPO 的问题
+GRPO eliminates the need for a Value Network (Critic) in PPO by generating multiple responses to the same question and using their relative group ranking as advantage estimates. It is the core training method used in **DeepSeek-R1**.
 
-标准 PPO 需要训练两个网络：
-- **Actor (策略网络)**: 生成响应
-- **Critic (价值网络)**: 评估状态的好坏
-
-Critic 和 Actor 一样大时（70B 模型），资源消耗翻倍。并且 Critic 难以训练，容易不稳定。
-
-### GRPO 的核心洞察
-
-**如果同一问题生成多个回答，直接用这些回答之间的相对分数作为优势估计，还需要 Critic 吗？**
-
-答案是不需要。这就是 GRPO 的核心思想。
+GROP 不需要 PPO 中的价值网络（Critic），通过对同一问题生成多个回答并比较组内相对优劣来估计优势。它是 **DeepSeek-R1** 的核心训练方法。
 
 ---
 
-## 算法详解
+## Why Do We Need GRPO?
 
-### 流程图
+### The PPO Problem
 
-```
-                     ┌─────────────────────────────────────────┐
-                     │          GRPO 训练一步                     │
-                     └─────────────────────────────────────────┘
+Standard PPO requires training **two networks** of equal size:
+- **Actor (Policy)**: generates responses
+- **Critic (Value)**: evaluates each state
 
-        ┌──────────┐
-        │  问题 q   │
-        └────┬─────┘
-             │
-             ▼
-    ┌────────────────────┐
-    │  采样 G 个回答       │  o_1, o_2, ..., o_G ~ π_θ
-    │  (来自同一策略)      │  (相同的输入 q)
-    └────────┬───────────┘
-             │
-             ▼
-    ┌────────────────────┐
-    │  给每个回答打分       │  r_1, r_2, ..., r_G
-    │  (奖励模型/规则)     │  (e.g. 答案正确性)
-    └────────┬───────────┘
-             │
-             ▼
-    ┌────────────────────┐
-    │  计算组内优势        │  A_i = (r_i - mean(r)) / std(r)
-    │  (不需要 Critic!)   │
-    └────────┬───────────┘
-             │
-             ▼
-    ┌────────────────────┐
-    │  用 PPO-clip 更新   │  L = min(ratio·A, clip(ratio)·A)
-    │  策略参数 θ          │  + KL 正则惩罚
-    └────────────────────┘
-```
+When both are 70B parameters, this **doubles memory** and introduces training instability.
 
-### 公式
+标准 PPO 需要训练两个同样大小的网络，当都是 70B 参数时，显存翻倍且训练不稳定。
 
-**优势计算 (Advantage):**
+### GRPO's Core Insight
 
-给定问题 q，生成 G 个输出 o_1, ..., o_G，对应的奖励为 r_1, ..., r_G：
+> Can we estimate advantage by comparing a question's own generated responses?
 
-```
-A_i = (r_i - μ) / σ
+**Answer: No Critic needed.** The group's mean-reward acts as a baseline; group std normalizes signal strength.
 
-其中:
-  μ = (1/G) * Σ r_j    # 组内平均奖励
-  σ = √((1/G) * Σ(r_j - μ)²)  # 组内标准差
-```
-
-**策略损失 (GRPO-Clip):**
-
-```
-L_GRPO(θ) = E[q, {o_i}] [ (1/G) * Σ min(
-    (π_θ(o_i|q) / π_θ_old(o_i|q)) * A_i,
-    clip(ratio, 1-ε, 1+ε) * A_i
-) - β * D_KL(π_θ || π_ref) ]
-```
-
-其中 ratio = π_θ(o_i|q) / π_θ_old(o_i|q)
-
-### 与 PPO 的关键区别
-
-| 维度 | PPO | GRPO |
-|------|-----|------|
-| Critic 网络 | 需要 (与 Actor 同级大小) | 不需要 |
-| 优势估计 | 基于 Critic 的 value 预测 | 基于组内相对排名 |
-| 显存占用 | 2x Actor | 1.2x Actor (只需存 G 个 rollout) |
-| 训练稳定性 | Critic 训练影响稳定性 | 优势直接可算，更稳定 |
-| 适用场景 | 通用 RL | 特别适合可验证奖励 (答案对错分明) |
+用组内均值做基线、标准差归一化，不需要价值网络。
 
 ---
 
-## 代码实现 (核心)
+## Algorithm
+
+```
+┌───────────────────────────────────┐
+│      GRPO: One Training Step      │
+└───────────────────────────────────┘
+
+    ┌──────────┐
+    │ Question  │
+    │    q      │
+    └────┬─────┘
+         │
+         ▼
+┌──────────────────────┐
+│ Sample G responses   │  o_1 ... o_G ~ π_θ
+│ 采样 G 个回答          │  from same policy
+└─────────┬────────────┘
+          ▼
+┌──────────────────────┐
+│ Score each response  │  r_1 ... r_G
+│ 给每个回答打分        │  (reward model)
+└─────────┬────────────┘
+          ▼
+┌──────────────────────────────────────┐
+│  Advantage: A_i = (r_i - μ) / σ     │
+│  组内优势 = (奖励-均值)/标准差        │
+│  -- NO CRITIC NEEDED!               │
+└────────────────────┬─────────────────┘
+                     ▼
+┌──────────────────────────────────────┐
+│  PPO-clip update + KL regularization │
+│  策略更新                              │
+└──────────────────────────────────────┘
+```
+
+### The Math
+
+```
+Advantage:
+  μ   = (1/G) · Σ r_j
+  σ   = √((1/G) · Σ(r_j - μ)²)
+  A_i = (r_i - μ) / σ
+
+Loss:
+  ratio = π_θ(o_i|q) / π_θ_old(o_i|q)
+  L = E[ min(ratio·A_i, clip(ratio,1-ε,1+ε)·A_i) ]
+      - β · D_KL(π_θ || π_ref)
+```
+
+### PPO vs GRPO
+
+| Dimension | PPO | GRPO |
+|-----------|-----|------|
+| Critic | Required (same size as Actor) | Not needed |
+| Advantage | From Critic value | From group ranking |
+| Memory | 2x Actor | ~1.2x Actor |
+| Stability | Critic errors hurt | More stable |
+| Best for | General RL | Verifiable rewards |
+
+---
+
+## Code Implementation
 
 ```python
 import torch
 import torch.nn.functional as F
 
-def grpo_loss(policy_logits, old_logits, rewards, beta, ref_logits=None, epsilon=0.2):
+def grpo_loss(policy_logits, old_logits, rewards, beta,
+              ref_logits=None, epsilon=0.2):
     """
-    GRPO 损失函数
-    
+    GRPO loss function
+
     Args:
-        policy_logits: [G, V] 当前策略的 logit
-        old_logits:    [G, V] 旧策略的 logit (生成这些样本时的策略)
-        rewards:       [G]   每个样本的标量奖励
-        beta:          float KL 惩罚系数
-        ref_logits:    [G, V] 参考策略的 logit (可选)
-        epsilon:       float PPO clip 参数
+        policy_logits: [G, V] current policy logits (current model)
+        old_logits:    [G, V] old policy logits (when samples were drawn)
+        rewards:       [G]   scalar reward per response
+        beta:          float KL penalty coefficient (KL惩罚系数)
+        ref_logits:    [G, V] reference policy logits (optional)
+        epsilon:       float PPO clip parameter
     """
-    # 计算概率比
-    log_probs = F.log_softmax(policy_logits, dim=-1).sum(dim=-1)
+    log_probs     = F.log_softmax(policy_logits, dim=-1).sum(dim=-1)
     old_log_probs = F.log_softmax(old_logits, dim=-1).sum(dim=-1)
-    
-    # 组内归一化优势
+
+    # Group-normalized advantage | 组内归一化优势
     mean_r = rewards.mean()
-    std_r = rewards.std() + 1e-8
+    std_r  = rewards.std() + 1e-8
     advantages = (rewards - mean_r) / std_r
-    
+
     # PPO-clip
-    ratio = torch.exp(log_probs - old_log_probs)
+    ratio   = torch.exp(log_probs - old_log_probs)
     clipped = torch.clamp(ratio, 1 - epsilon, 1 + epsilon)
-    
     loss_clip = torch.min(ratio * advantages, clipped * advantages)
-    
-    # KL 惩罚
+
+    # KL penalty | KL 惩罚
     kl = 0.0
     if ref_logits is not None:
         log_policy = F.log_softmax(policy_logits, dim=-1)
-        log_ref = F.log_softmax(ref_logits, dim=-1)
-        kl = F.kl_div(log_ref, log_policy, reduction='batchmean', log_target=True)
-    
-    # 损失取负 (因为要最大化)
-    grpo_loss = -(loss_clip.mean() - beta * kl)
-    return grpo_loss
+        log_ref    = F.log_softmax(ref_logits, dim=-1)
+        kl = F.kl_div(log_ref, log_policy,
+                      reduction='batchmean', log_target=True)
+
+    # Negate for minimization (we maximize reward)
+    return -(loss_clip.mean() - beta * kl)
 ```
 
 ---
 
-## 深度讨论
+## Deep Dive
 
-### 1. GRPO 的优势估计是否靠谱？
+### 1. Is the Advantage Estimate Reliable?
 
-GRPO 用 **组内均值归一化** 替代 Critic 的优势函数估计。这本质上是给每个回答相对于同组其他回答定位：
+GRPO replaces the Critic with **group-relative normalization**:
 
-- 组内最好的回答: A_i > 0  →  概率增加
-- 组内最差的回答: A_i < 0  →  概率降低
-- 组内平均水平: A_i ≈ 0  →  几乎不变
+| In group | A_i | Effect |
+|----------|-----|--------|
+| Best response | > 0 | Increase probability |
+| Worst response | < 0 | Decrease probability |
+| Average | approx 0 | Near-zero update |
 
-**直觉**: 如果 G 足够大（比如 G=16），组内均值近似于 "基线水平"。标准差归一化则提供了自适应的学习信号 -- 当所有回答都很差时（低方差组），梯度会被放大；当所有回答接近时（高方差组），梯度会被抑制。
+The std normalization provides **adaptive signal**: when all responses are bad (low variance), gradients amplify; when similar (high variance), they dampen.
 
-### 2. 什么时候 GRPO 不如 PPO?
+### 2. When Does GRPO Underperform?
 
-- **奖励噪声大时**: 如果奖励模型的判别力差，组内排名本身就不可信，GRPO 的信号质量下降
-- **需要 bootstrapping 的任务**: GRPO 的组内归一化是 "零和" 的，无法判断所有回答都好或都坏
-- **长序列决策**: GRPO 在单步生成任务表现好，在需要多步决策的环境中效果较差
+- **Noisy rewards**: unreliable reward models make rankings noisy
+- **Need for bootstrapping**: GRPO is zero-sum within a group -- can't tell if ALL responses are good or ALL are bad
+- **Long-horizon tasks**: designed for single-step generation, not multi-step environments
 
-### 3. DeepSeek-R1 对 GRPO 的关键改进
+### 3. DeepSeek-R1's Key Improvements
 
-- **规则奖励 + 格式奖励**: DeepSeek 不仅评估答案对错，还奖励模型输出推理过程的格式（thinking trace）
-- **混合训练**: GRPO 与 SFT 数据混合训练，防止分布偏移过大
-- **多次 rollout**: 每个问题采样更多候选，提升优势估计精度
-
----
-
-## 扩展阅读
-
-- [DeepSeekMath: Pushing the Limits of Mathematical Reasoning (2024)](https://arxiv.org/abs/2402.03300) -- GRPO 首次提出
-- [DeepSeek-R1: Incentivizing Reasoning Capability (2025)](https://arxiv.org/abs/2501.12948) -- GRPO 的大规模应用
-- [PPO 原始论文](https://arxiv.org/abs/1707.06347)
+- Rule-based + format rewards (not just answer correctness, but reasoning trace structure)
+- Mixed with SFT data to prevent excessive distribution shift
+- Large G (more rollouts per question) for better advantage estimation
 
 ---
 
-_下一个教程: [Day 2 - MoE 架构深度解析](02-mixture-of-experts.md)_
+## Further Reading
+
+- [DeepSeekMath](https://arxiv.org/abs/2402.03300) -- Original GRPO
+- [DeepSeek-R1](https://arxiv.org/abs/2501.12948) -- GRPO at scale
+- [PPO Paper](https://arxiv.org/abs/1707.06347)
+
+---
+
+_Prev: --  |  Next: [Day 02 - MoE](02-mixture-of-experts.md)_

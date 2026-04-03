@@ -1,182 +1,178 @@
-# Speculative Decoding - 投机解码
+# Day 03: Speculative Decoding
+# 第 03 天: 投机解码
 
-> **日期**: 2026-04-03 | **难度**: 进阶 | **类别**: 推理加速 / LLM 系统
+> **Date**: 2026-04-03 | **Difficulty**: Advanced | **Category**: Inference Acceleration 推理加速
 
----
-
-## 一句话总结
-
-用一个小模型 "猜" 后面几个 token，然后用大模型一次性验证。猜对了就赚，猜错了不亏。**这是一种严格无损的加速方法 -- 输出分布与大模型完全相同**，不会降低任何质量。
+> **Watch the animation**: ![Speculative Decoding Animation](../gifs/03-speculative-decoding.gif)
 
 ---
 
-## 为什么需要 Speculative Decoding?
+## One-Line Summary
 
-### 问题: LLM 推理是内存带宽绑定的
+Use a small model to "guess" the next K tokens, then verify them all with the large model in a single pass. **Strictly lossless** -- the output distribution is identical to running the large model alone.
 
-生成式 LLM 每次只能预测一个 token，然后要等 GPU 显存把整个模型参数读一遍。100B 参数的模型，生成一个 token 需要读 200GB 显存。GPU 的计算单元大量空闲，**瓶颈在显存带宽**。
-
-```
-GPU Compute:      [██░░░░░░░░░░░░░░░░]  15% 利用率
-Memory Bandwidth: [███████████████████]  95% 利用率
-                          ↑
-                    这才是瓶颈
-```
-
-### 核心思路
-
-如果一次验证 K 个 token 而不是生成 1 个 token，同样的内存带宽消耗，产出了 K 倍的 token -- 吞吐量提升了。
+用小模型"猜"后面 K 个 token，然后用大模型一次性验证。**严格无损** -- 输出分布与只跑大模型完全相同。
 
 ---
 
-## 算法详解
+## The Problem | 问题所在
 
-### 流程图
+LLM inference is **memory-bandwidth bound**. Generating one token requires reading all model parameters through GPU memory. For a 100B model, that's ~200GB per token. The GPU compute units sit mostly idle.
+
+LLM 推理是**内存带宽瓶颈**。生成一个 token 需要读取全部模型参数。100B 模型每次需要约 200GB 显存带宽。GPU 计算单元大量空闲。
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    标准自回归解码                              │
-│                                                              │
-│  Prompt → [LLM] → token_1 → [LLM] → token_2 → [LLM] → ...   │
-│           (forward)   (forward)   (forward)                   │
-│                                                              │
-│  每生成 1 个 token，需要做 1 次完整的 LLM forward pass         │
-└──────────────────────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────────────────────┐
-│                   Speculative Decoding                        │
-│                                                              │
-│  步骤 1 (Draft):  小模型生成 K 个候选 token                     │
-│                   prompt → [Draft] → d1,d2,...,dK            │
-│                   (K 次 cheap forward pass)                   │
-│                                                              │
-│  步骤 2 (Verify): 大模型同时验证 K 个候选的                      │
-│                   [LLM] → p(x|prompt), p(x|d1,...,d_{K-1})  │
-│                   (1 次 forward pass 输出 K 个分布)           │
-│                                                              │
-│  步骤 3 (Accept/Reject):                                      │
-│                   For each position i:                         │
-│                     if d_i ~ p(x | ...): accept ✓            │
-│                     else: sample from p(x | ...), reject ✗   │
-│                                                              │
-│  如果 K-1 个都猜对了 → K tokens / 1 pass = Kx 加速!            │
-│  如果 1 个都没猜对 → 回退到从 LLM 分布采样 = 无损               │
-└──────────────────────────────────────────────────────────────┘
+GPU Compute:      [████░░░░░░░░░░░░░░░░]  15% utilization
+Memory Bandwidth: [████████████████████]  95% utilization  ← BOTTLENECK
 ```
 
-### 接受/拒绝的数学细节
+### The Core Idea | 核心思路
 
-关键: **如何保证最终分布与只跑大模型完全一样？**
+If we verify K tokens in one pass instead of generating 1, the same memory bandwidth produces Kx the output.
+
+如果一次验证 K 个 token 而非生成 1 个，同样的带宽产出 K 倍的 token。
+
+---
+
+## Algorithm | 算法详解
+
+### Standard Autoregressive Decoding | 标准自回归解码
+
+```
+Prompt → [LLM] → token_1 → [LLM] → token_2 → [LLM] → ...
+         (forward)   (forward)   (forward)
+
+1 generated token = 1 full LLM forward pass per token.
+```
+
+### Speculative Decoding | 投机解码
+
+```
+Step 1 - DRAFT (cheap):
+  Prompt → [Draft Model, 1B] → d1, d2, d3, d4, d5
+  5 cheap forward passes on small model
+
+Step 2 - VERIFY (expensive, but only 1!):
+  [Target Model, 70B] → p(x|prompt), p(x|d1), ..., p(x|d1...d4)
+  1 forward pass produces distributions at all 5 positions
+
+Step 3 - ACCEPT / REJECT:
+  For each position i:
+    if rand() < min(1, p(d_i) / q(d_i)):
+       accept ✓  (keep draft token, free!)
+    else:
+       reject ✗  (resample from target's distribution)
+       break     (discard all subsequent draft tokens)
+
+If 4 of 5 accepted: 4 tokens from 1 expensive pass → ~5x speedup!
+```
+
+### Why Is It Lossless? | 为什么无损？
+
+The acceptance probability `min(1, p/q)` is carefully designed so the final output distribution equals exactly running the large model:
+
+- When the large model agrees (p/q ≥ 1): 100% accept the draft
+- When the large model disagrees (p/q < 1): accept with probability p/q, otherwise resample from the target distribution
+
+The mathematical proof guarantees distribution equivalence.
+
+接受概率 `min(1, p/q)` 精心保证了最终分布等价于纯大模型采样。数学上可证明。
+
+---
+
+## Code | 代码实现
 
 ```python
+@torch.no_grad()
 def speculative_decode_step(draft_tokens, target_probs, draft_probs):
     """
-    对每个 draft token 做接受/拒绝判定。
-    
-    重要: 这个接受概率设计保证了最终输出分布
-    = 只用大模型生成的分布 (exact match)
-    
+    Accept/reject draft tokens while preserving exact target distribution.
+
     Args:
-        draft_tokens: [K] 小模型生成的候选 token
-        target_probs: [K, V] 大模型在每个位置的对下一个 token 的概率分布
-        draft_probs:  [K, V] 小模型在每个位置对下一个 token 的概率分布
+        draft_tokens:  [K]   small model's candidate tokens
+        target_probs:  [K, V] large model's distributions at each position
+        draft_probs:   [K, V] small model's distributions at each position
+
+    Returns:
+        accepted tokens (may include 1 resampled token at rejection point)
     """
-    accepted_tokens = []
+    accepted = []
     for i, d_i in enumerate(draft_tokens):
-        p = target_probs[i, d_i]      # 大模型认为这个 token 的概率
-        q = draft_probs[i, d_i]       # 小模型认为这个 token 的概率
-        
-        # 接受概率: min(1, p/q)
-        # 直觉: 
-        #   - 如果大模型也觉得 d_i 是好选择 (p/q >= 1) → 100% 接受
-        #   - 如果大模型觉得 d_i 不太对 (p/q < 1) → 以 p/q 概率接受
-        if torch.rand(1).item() < min(1.0, p / (q + 1e-10)):
-            accepted_tokens.append(d_i)   # 接受
+        p = target_probs[i, d_i]          # target's confidence in draft
+        q = draft_probs[i, d_i]           # draft's confidence
+        if torch.rand(1).item() < min(1.0, p.item() / (q.item() + 1e-10)):
+            accepted.append(d_i)           # accept -- free token!
         else:
-            # 拒绝！从大模型的分布中重新采样
+            # Reject + resample from target distribution
             resampled = torch.multinomial(target_probs[i], 1).item()
-            accepted_tokens.append(resampled)
-            break  # 第一个拒绝的位置之后的全部丢弃
-    return accepted_tokens
+            accepted.append(resampled)
+            break  # discard all tokens after the first rejection
+    return accepted
 ```
 
-### 期望加速比
+### Expected Speedup | 期望加速
 
-设每个 draft token 的接受率为 α（小模型和大模型的一致性）：
+If acceptance rate is α (how often draft agrees with target):
 
 ```
-期望接受 token 数 = Σ (α^i) for i=1 to K = α(1-α^K)/(1-α)
+E[accepted] = Σ α^i  for i = 1 to K  =  α(1 - α^K) / (1 - α)
 
-加速比 = 期望接受数 / 1 ≈ 1 / (1 - α)    (当 K 很大时)
+Speedup ≈ 1 / (1 - α)   (for large K)
 
-举例:
-  α = 0.7 (70% 猜中率) → 加速 ~3.3x
-  α = 0.5 (50% 猜中率) → 加速 2x
-  α = 0.3 (30% 猜中率) → 加速 ~1.4x
+Examples | 示例:
+  α = 0.7 → ~3.3x speedup
+  α = 0.5 → ~2.0x
+  α = 0.3 → ~1.4x
 ```
 
 ---
 
-## 现代变体
+## Modern Variants | 现代变体
 
-### 1. Medusa (多头投机解码)
+### 1. Medusa
 
-不训练独立的 Draft 模型，而是在大模型旁边加几个 **额外的 LM Head**：
+Instead of a separate draft model, add extra LM Heads to the target model:
 
 ```
-标准 LLM:
-  [Embed] → [Layer 1] → [Layer 2] → ... → [LM Head] → token_1
-
-Medusa LLM:
-  [Embed] → [Layer 1] → [Layer 2] → ... → [LM Head 1] → token_1
-                                      → [Head 2] → token_2
-                                      → [Head 3] → token_3
-                                      → [Head 4] → token_4
+Standard:  ... → [Transformer] → [LM Head] → token_1
+Medusa:    ... → [Transformer] → [Head 1] → token_1
+                                  → [Head 2] → token_2
+                                  → [Head 3] → token_3
 ```
 
-**好处**: 不需要独立训练小模型，直接在已有大模型上微调几个小头。
+No extra training for the main model, just tune small heads.
 
 ### 2. Lookahead Decoding
 
-用 **n-gram 缓存** 作为 Draft 模型。如果之前出现过类似的上下文模式，直接复用之前的输出：
+Use n-gram cache as the draft: if a similar context appeared before, reuse its continuation. Zero parameters.
 
-```python
-# Lookahead: 基于历史 n-gram 推测
-cache = {
-    "The capital of France is": "Paris, which",
-    "Python is a programming": "language that",
-}
-draft = cache.get(current_prefix, "").split()  # 直接查缓存
-```
+用历史 n-gram 缓存做 Draft，零参数。
 
 ### 3. EAGLE / EAGLE-2
 
-EAGLE (Extrapolation Algorithm for Greater Language-model Efficiency) 在 Draft 阶段用特征外推（feature extrapolation）而非独立模型：
-
-- 利用大模型的 hidden states 做线性外推
-- Draft 阶段不需要任何额外参数
-- 比 Medusa 更省内存
+Feature extrapolation instead of separate draft model. Uses the target model's hidden states to predict future tokens linearly. No extra parameters at all.
 
 ---
 
-## 何时最有效
+## When to Use | 适用场景
 
-| 场景 | 接受率 α | 预计加速 | 原因 |
-|------|---------|---------|------|
-| 代码补全 | 0.7-0.8 | 2.5-4x | 代码有强模式 |
-| 翻译 | 0.5-0.6 | 1.8-2.2x | 句式有一定可预测性 |
-| 闲聊 | 0.3-0.5 | 1.2-1.8x | 开放性高，难预测 |
-| 数学推理 | 0.2-0.3 | 1.1-1.3x | 复杂推理，小模型难跟 |
+| Scenario | Acceptance Rate α | Speedup | Reason |
+|----------|:-:|:-:|------|
+| Code completion | 0.7-0.8 | 2.5-4x | Strong patterns in code |
+| Translation | 0.5-0.6 | 1.8-2.2x | Some predictability |
+| Chat | 0.3-0.5 | 1.2-1.8x | Open-ended |
+| Math reasoning | 0.2-0.3 | 1.1-1.3x | Hard to predict |
 
 ---
 
-## 扩展阅读
+## Further Reading
 
-- [Speculative Decoding (原始论文)](https://arxiv.org/abs/2211.17192)
-- [Medusa: Speculative Decoding with Multiple Decoding Heads](https://arxiv.org/abs/2401.10774)
+- [Speculative Decoding](https://arxiv.org/abs/2211.17192)
+- [Medusa](https://arxiv.org/abs/2401.10774)
 - [Lookahead Decoding](https://arxiv.org/abs/2402.02057)
-- [EAGLE: Speculative Sampling with Rethinking Feature Extrapolation](https://arxiv.org/abs/2404.02818)
+- [EAGLE](https://arxiv.org/abs/2404.02818)
 
 ---
 
-_上一个: [Day 2 - MoE](02-mixture-of-experts.md) | 下一个: [Day 4 - Test-Time Compute](04-test-time-compute.md)_
+_Prev: [Day 02 - MoE](02-mixture-of-experts.md)  |  Next: [Day 04 - Test-Time Compute](04-test-time-compute.md)_
+_上一篇: [Day 02 - MoE](02-mixture-of-experts.md)  |  下一篇: [Day 04 - 推理时计算](04-test-time-compute.md)_

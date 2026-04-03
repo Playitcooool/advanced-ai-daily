@@ -1,318 +1,220 @@
-# Multi-Agent Reflection - 多智能体反思循环
+# Day 05: Multi-Agent Reflection
+# 第 05 天: 多智能体反思系统
 
-> **日期**: 2026-04-03 | **难度**: 进阶 | **类别**: Agent 架构 / 多智能体系统
+> **Date**: 2026-04-03 | **Difficulty**: Advanced | **Category**: Agent Architecture 智能体架构
 
----
-
-## 一句话总结
-
-不依赖单个 LLM 完成所有工作，而是让 **多个 LLM 扮演不同角色**（生成者、审查者、改进者），通过多轮 "生成 → 反馈 → 修正" 的循环，利用多样性换取更好的最终输出。这比单模型的 Self-Reflection 更强，因为每个 Agent 有不同的视角和 Prompt。
+> **Watch the animation**: ![Multi-Agent Reflection Animation](../gifs/05-multi-agent-reflection.gif)
 
 ---
 
-## 从 Agent 进化看 Multi-Agent
+## One-Line Summary
+
+Instead of relying on a single LLM to do everything, have **multiple LLMs play different roles** (generator, critic, refiner, verifier) in a multi-round "generate → critique → refine" loop. This is stronger than single-model self-reflection because each agent has a distinct perspective and prompt.
+
+不依赖单个 LLM 完成所有工作，而是让多个 LLM 扮演不同角色，通过多轮"生成 → 批评 → 修正"循环提升最终输出质量。比单体自我反思更强，因为每个 Agent 有不同的视角和 Prompt。
+
+---
+
+## The Evolution | 进化路径
 
 ```
-LLM Evolution:
-  
-  v1. Prompt → LLM → Response           # 单次生成
-        ↓
-  v2. Prompt → LLM → Self-Critique → Fix  # 单体自我反思 (Reflexion)
-        ↓
-  v3. Generator ──→ Critic ──→ Refiner    # 两阶段流水线
-           ↑___________│ (多轮)
-        ↓
-  v4. Planner → Executor → Reviewer       # 分工明确的多 Agent
-             ↓              ↑
-          Verifier ────────┘
-        ↓
-  v5. 多个 Expert Agent 并行生成，
-      一个 Judge Agent 聚合结果
-      (Committee / Debate 架构)
+v1  Prompt → LLM → Response
+               单次生成 (简单但质量不可控)
+    ↓
+v2  Prompt → LLM → Self-Critique → Fix
+               单体自我反思 (Reflexion，但 LLM 倾向于"和稀泥")
+    ↓
+v3  Generator → Critic → Refiner
+               角色分离 (Critic 更客观)
+    ↓
+v4  Planner → Executor → Verifier
+               PEV 架构 (最接近人类解决问题的方式)
+    ↓
+v5  Multiple Experts → Judge
+               委员会/辩论 (强制探索对立观点)
 ```
 
 ---
 
-## 经典架构: Reflexion
+## Classic Architecture: Reflexion
 
-Reflexion 是最著名的单体 Agent 反思循环，也是所有 Multi-Agent 架构的基础。
+The foundation of all multi-agent reflection:
 
 ```python
-def reflexion_agent(model, problem, max_reflections=3):
+def reflexion(model, problem, max_attempts=4):
     """
-    Reflexion: 生成 → 评估 → 反思 → 再尝试
-    
-    关键: 不是简单让模型改答案，而是让模型生成
-    一份 "经验教训" (Reflection)，包含在下次尝试的 prompt 中。
-    这样 Agent 能从过去的错误中 "学习"。
+    Generate → Evaluate → Reflect → Retry
+    Key: Reflections are carried forward as context,
+         so the agent "learns from its mistakes"
     """
-    # 经验库: 记录过去的反思
-    reflections = []
-    
-    for attempt in range(max_reflections + 1):
-        # 构建 prompt (包含过去的反思)
+    reflections = []  # lessons learned
+
+    for attempt in range(max_attempts):
         prompt = f"Problem: {problem}\n"
-        if reflections:
-            prompt += f"\n过去的经验教训:\n"
-            for r in reflections:
-                prompt += f"- {r}\n"
-        prompt += "\nSolution: "
-        
-        # 生成
-        solution = model.generate(prompt, stop=["\nEvaluation:"])
-        
-        # 评估（可以是代码执行也可以是模型自评）
-        evaluation = _evaluate(solution, problem)
-        
-        if evaluation.passed:
+        for r in reflections:
+            prompt += f"  Lesson: {r}\n"
+        prompt += "Solution: "
+
+        solution = model.generate(prompt)
+        eval_result = _evaluate(solution, problem)
+        if eval_result.passed:
             return solution
-        
-        # 反思: 为什么错了？下次应该怎么做？
+
+        # Reflect on the error
         reflection = model.generate(
             f"Problem: {problem}\n"
             f"My solution: {solution}\n"
-            f"Error: {evaluation.error}\n"
-            f"反思: 我哪里做错了？下次应该怎么改进？"
+            f"Error: {eval_result.error}\n"
+            f"What did I do wrong? How to improve?"
         )
         reflections.append(reflection)
-    
-    return solution  # 超过最大尝试次数
+
+    return solution
 ```
 
 ---
 
-## Multi-Agent 架构对比
+## The PEV Architecture | PEV 架构
 
-### 架构 1: Critique-Refine 流水线 (两 Agent)
+This is the **most powerful** pattern for complex tasks:
 
 ```
-    ┌────────┐   生成   ┌────────┐   批评   ┌────────┐
-    │Generator│ ──────→ │  Critic │ ──────→ │Refiner │
-    │          │         │         │          │       │
-    └────────┘         └────────┘         └───┬───┘
-                                                  │
-                              ┌──────────────────┘
-                              │ (修正)
-                              ▼
-                         ┌────────┐
-                         │ Output │
-                         └────────┘
+                     Problem
+                        │
+                   ┌────┴────┐
+                   │Planner  │  # Decompose, plan, synthesize
+                   │  规划器  │
+                   └────┬────┘
+                        │ Subtasks [s1, s2, s3]
+              ┌─────────┼─────────┐
+              ▼         ▼         ▼
+        ┌─────────┐ ┌──────┐ ┌──────┐
+        │Exec-A   │ │Exec-B│ │Exec-C│  # Parallel execution
+        │子任务A  │ │子任务B│ │子任务C│
+        └────┬────┘ └──┬───┘ └──┬───┘
+             │         │        │
+             ▼         ▼        ▼
+        ┌──────────────────────────┐
+        │       Verifier           │  # Check each output
+        │        验证器             │  # Retry if failed
+        │   ✗ A: pass              │
+        │   ✗ B: pass              │
+        │   ✓ C: fail → retry     │
+        └─────────┬────────────────┘
+                  │ Verified results
+                  ▼
+            Final Answer
 ```
 
 ```python
-def critique_refine_pipeline(generator, critic, refiner, input_text, max_rounds=3):
-    output = generator.generate(f"Generate: {input_text}")
-    
-    for round in range(max_rounds):
-        critique = critic.generate(
-            f"Review this output for errors, gaps, and improvements:\n{output}"
+class PEVSystem:
+    def __init__(self, planner, executor, verifier, max_retries=2):
+        self.planner   = planner
+        self.executor  = executor
+        self.verifier  = verifier
+        self.max_retries = max_retries
+
+    def solve(self, problem):
+        # Step 1: Decompose
+        plan = self.planner.generate(
+            f"Problem: {problem}\n"
+            f"Break into independent subtasks with clear I/O."
         )
-        
-        if "no issues found" in critique.lower() or round == max_rounds - 1:
-            break
-        
-        output = refiner.generate(
-            f"Original output: {output}\nCritique: {critique}\n"
-            f"Revise the output addressing all issues."
+        subtasks = self._parse_plan(plan)
+
+        results = {}
+        for step in subtasks:
+            result = self.executor.generate(step.prompt)
+
+            # Step 2: Verify (with retry loop)
+            for retry in range(self.max_retries):
+                verdict = self.verifier.generate(
+                    f"Task: {step.desc}\nResult: {result}\n"
+                    f"Correct and complete? YES/NO with reasons."
+                )
+                if verdict.startswith("YES"):
+                    break
+                result = self.executor.generate(
+                    f"Task: {step.desc}\nPrevious: {result}\n"
+                    f"Feedback: {verdict}\nFix and regenerate."
+                )
+            results[step.id] = result
+
+        # Step 3: Synthesize
+        return self.planner.generate(
+            f"Problem: {problem}\nResults: {results}\n"
+            f"Synthesize into a final answer."
         )
-    
-    return output
 ```
 
-### 架构 2: Debate / 辩论架构 (多 Agent)
+---
+
+## Why Multi-Agent > Single Agent? | 为什么更强？
+
+### 1. Information Diversity | 信息多样性
+
+Different prompts trigger different "reasoning paths" in the model. Forcing Agent A to support X and Agent B to oppose X covers perspectives a single agent would never explore simultaneously.
+
+### 2. Error Cancellation | 错误消除
+
+If two independent agents each have a 10% hallucination rate, the chance they hallucinate the *same* thing is < 1%. The Critic/Verifier catches errors the Generator missed.
+
+### 3. Role Assignment Breaks "Agreement Bias" | 角色扮演打破"和稀泥"
+
+LLMs naturally say "both sides have merit." Forcing roles ("you're the defense attorney" / "you're the prosecutor") breaks this tendency.
+
+---
+
+## When to Use | 何时使用
+
+| Scenario | Recommended | Why |
+|----------|:---:|-----|
+| Factual queries | NO | Direct lookup is enough |
+| Creative writing | CASE-DEPENDS | Diversity may hurt coherence |
+| Complex coding | YES | PEV architecture excels |
+| Math proofs | YES | Verifier can use code execution |
+| Long docs | YES | Parallel section analysis |
+
+---
+
+## Debate Architecture | 辩论架构
 
 ```
         Topic
           │
       ┌───┴───┐
-      │       │
-  Agent A  Agent B          # 对立视角
-  ("支持X") ("反对X")
-      │       │
-   论点1    论点1
-      │       │
-      └───┬───┘
-          │ 交叉质疑 & 回应 (多轮)
-      ┌───┴───┐
-      │       │
-  Agent A  Agent B
-  论点2    论点2
-      │       │
-      └───┬───┘
-          ▼
-     ┌─────────┐
-     │  Judge  │   # 第三方 Agent 评估谁的最终论点更强
-     └─────────┘
-```
-
-**为什么 Debate 比单模型强？**
-
-- **强制探索对立观点**: 如果不强制 Agent A 只支持 X，模型倾向于说 "两边都有道理"
-- **消除幻觉**: Agent B 专门攻击 Agent A 的错误
-- **更深的覆盖**: 每轮辩论都推进一层深度
-
-```python
-def debate_system(agent_a, agent_b, judge, topic, rounds=3):
-    """Multi-Agent Debate System"""
-    # 初始化: 两方各生成初始立场
-    a_argument = agent_a.generate(f"你支持以下论点，请详细论证:\n{topic}")
-    b_argument = agent_b.generate(f"你反对以下论点，请逐一反驳:\n{topic}")
-    
-    for round in range(rounds):
-        # 互相质疑
-        a_rebuttal = agent_a.generate(
-            f"Topic: {topic}\n"
-            f"Opponent's argument: {b_argument}\n"
-            f"请逐一回应并指出对方论证中的漏洞:"
-        )
-        b_rebuttal = agent_b.generate(
-            f"Topic: {topic}\n"
-            f"Opponent's argument: {a_rebuttal}\n"
-            f"请逐一回应并指出对方论证中的漏洞:"
-        )
-        a_argument = a_rebuttal
-        b_argument = b_rebuttal
-    
-    # Judge 裁决
-    verdict = judge.generate(
-        f"Topic: {topic}\n"
-        f"Side A's final argument: {a_argument}\n"
-        f"Side B's final argument: {b_argument}\n"
-        f"综合考虑，哪一方的论点更有说服力？为什么？"
-    )
-    
-    return {
-        "side_a": a_argument,
-        "side_b": b_argument, 
-        "verdict": verdict
-    }
-```
-
-### 架构 3: Planner-Executor-Verifier (PEV)
-
-这是 **最接近人类解决问题方式** 的多 Agent 架构。
-
-```
-                    Problem
-                       │
-                  ┌────┴────┐
-                  │ Planner │  # 分析任务，拆解子任务
-                  └────┬────┘
-                       │ 计划 (steps: [s1, s2, ..., sn])
-              ┌────────┼────────┐
-              ▼        ▼        ▼
-        ┌─────────┐┌───────┐┌───────┐
-        │Executor1││Exec 2 ││Exec 3 │  # 并行执行子任务
-        └────┬────┘└───┬───┘└──┬────┘
-             │         │       │
-             ▼         ▼       ▼
-        ┌─────────────────────────┐
-        │       Verifier          │  # 检查每个子任务的输出
-        │  ┌───pass/fail───┐      │
-        │  │ 如果不通过      │      │
-        │  ▼               │      │
-        │  要求重做/修正     │      │
-        └────────┬─────────────────┘
-                 │ 汇总通过的结果
-                 ▼
-           Final Answer
-```
-
-```python
-class PlannerExecutorVerifier:
-    def __init__(self, planner, executor_model, verifier, 
-                 max_retries=2):
-        self.planner = planner
-        self.executor = executor_model
-        self.verifier = verifier
-        self.max_retries = max_retries
-    
-    def solve(self, problem):
-        # Step 1: Planner 拆分解题步骤
-        plan = self.planner.generate(
-            f"Problem: {problem}\n"
-            f"Break this down into independent subtasks. "
-            f"Each subtask should have clear input and expected output."
-        )
-        
-        # Step 2: 解析计划为结构化步骤 (实际中会用 JSON parsing)
-        subtasks = self._parse_plan(plan)
-        
-        results = {}
-        for step in subtasks:
-            # Step 3: Executor 执行
-            result = self.executor.generate(step.prompt)
-            results[step.id] = result
-            
-            # Step 4: Verifier 验证
-            for retry in range(self.max_retries):
-                verdict = self.verifier.generate(
-                    f"Subtask: {step.description}\n"
-                    f"Result: {result}\n"
-                    f"Does this result correctly and completely "
-                    f"address the subtask? Answer YES or NO with reasons."
-                )
-                
-                if verdict.startswith("YES"):
-                    break
-                
-                # 修正
-                result = self.executor.generate(
-                    f"Subtask: {step.description}\n"
-                    f"Previous result: {result}\n"
-                    f"Verifier feedback: {verdict}\n"
-                    f"Fix the issues and regenerate."
-                )
-                results[step.id] = result
-        
-        # Step 5: Planner 汇总
-        final = self.planner.generate(
-            f"Problem: {problem}\n"
-            f"Subtask results: {results}\n"
-            f"Synthesize these results into a final answer."
-        )
-        
-        return final
+  Pro-Agent  Con-Agent     # Opposing perspectives
+  (支持方)    (反对方)
+      │        │
+  Round 1   Round 1
+  Arguments Arguments
+      │        │
+  ┌───┴────────┴───┐
+  │  Cross-Examination (N rounds)  │
+  │  Rebuttal + Counter-Rebuttal   │
+  └───┬─────────────┬───┘
+      │             │
+  ┌───┴─────────────┴───┐
+  │        Judge         │  # Third-party evaluation
+  │       裁决者          │
+  └──────────┬────────────┘
+          Verdict
 ```
 
 ---
 
-## 深度思考: 为什么 Multi-Agent 比 Single Agent 强?
+## Further Reading
 
-### 1. 信息多样性 (Information Diversity)
-
-同一问题，不同 prompt 会触发模型不同的 "思维路径"。强制 Agent A 支持 X、Agent B 反对 X，保证覆盖了单一 Agent 不会同时产生的两面视角。
-
-### 2. 错误消除 (Error Cancellation)
-
-如果两个独立 Agent 的幻觉率各 10%，它们恰好犯同样幻觉的概率 < 1%。Critic/Verifier 的存在可以显著降低输出中的错误。
-
-### 3. 角色扮演降低 "和稀泥" 倾向
-
-LLM 天生倾向于 "两边都有道理"。强制角色分配（"你是辩护律师"/"你是检察官"）打破了这种倾向。
-
-### 4. 什么时候 Multi-Agent 不一定更好?
-
-| 场景 | Multi-Agent | 原因 |
-|------|------------|------|
-| 事实查询 | 不推荐 | 直接查就好，不需要多 Agent 辩论 |
-| 创意写作 | 看情况 | 多样性可能破坏 coherence |
-| 复杂编程 | 强烈推荐 | PEV 架构在编程任务效果最明显 |
-| 数学证明 | 强烈推荐 | Verifier 可以用代码执行器 |
-| 长文档分析 | 推荐 | 多 Agent 可并行分析不同章节 |
+- [Reflexion](https://arxiv.org/abs/2303.11366)
+- [Chain of Verification (CoVe)](https://arxiv.org/abs/2309.11495)
+- [LLM Debates](https://arxiv.org/abs/2305.14333)
+- [AutoGen](https://microsoft.github.io/autogen/)
+- [MetaGPT](https://arxiv.org/abs/2308.00352)
 
 ---
 
-## 扩展阅读
+_Prev: [Day 04 - Test-Time Compute](04-test-time-compute.md)_
+_上一篇: [Day 04 - 推理时计算](04-test-time-compute.md)_
 
-- [Reflexion: Language Agents with Verbal Reinforcement Learning](https://arxiv.org/abs/2303.11366)
-- [Chain of Verification (CoVe)](https://arxiv.org/abs/2309.11495) -- 生成 → 验证计划 → 执行验证 → 修正
-- [LLM Debates](https://arxiv.org/abs/2305.14333) -- 辩论式推理
-- [AutoGen](https://microsoft.github.io/autogen/) -- Microsoft 的多 Agent 框架
-- [MetaGPT](https://arxiv.org/abs/2308.00352) -- 用 SOP 编码多 Agent 流程
-
----
-
-_上一个: [Day 4 - Test-Time Compute](04-test-time-compute.md)_
-
-_这是第一期的内容。仓库每天更新，明天见!_
+_This completes the first batch. More tutorials coming daily!_
+_第一期完成。每日持续更新！_
