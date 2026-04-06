@@ -18,11 +18,14 @@
 | 06 | [Quantization — TurboQuant & 1-bit LLMs](tutorials/en/06-quantization.md) | Inference | ~15 min | Mermaid + PNG |
 | 07 | [RBF Attention](tutorials/en/07-rbf-attention.md) | Architecture | ~15 min | Mermaid + PNG |
 | 08 | [Memory & KV Cache](tutorials/en/08-memory-kv-cache.md) | Inference | ~20 min | Mermaid + PNG |
+| 09 | [Simple Self-Distillation (SSD)](tutorials/en/09-self-distillation.md) | Post-Training | ~20 min | Mermaid + GIF |
+| 10 | [SRPO — Unifying GRPO & Self-Distillation](tutorials/en/10-sample-routing.md) | Post-Training | ~15 min | Mermaid + GIF |
+| 11 | [Gradient Boosted Attention](tutorials/en/11-gradient-boosted-attention.md) | Attention | ~15 min | Mermaid + GIF |
 
-## 🇨🇳 中文教程
+## 🇨🇳 Chinese Tutorials
 
-| # | 主题 | 分类 | 时间 | 图示 |
-|:--|:-----|:-----|:----:|:----:|
+| # | Topic | Category | Time | Visual |
+|:--|:------|:---------|:----:|:------:|
 | 01 | [GRPO — 组相对策略优化](tutorials/zh/01-grpo.md) | 强化学习 | ~15 min | Mermaid + GIF |
 | 02 | [MoE — 混合专家架构](tutorials/zh/02-mixture-of-experts.md) | 模型架构 | ~20 min | Mermaid + GIF |
 | 03 | [投机解码](tutorials/zh/03-speculative-decoding.md) | 推理优化 | ~15 min | Mermaid + GIF |
@@ -31,6 +34,9 @@
 | 06 | [模型量化 — TurboQuant 与 1-bit 大模型](tutorials/zh/06-quantization.md) | 推理优化 | ~15 min | Mermaid + PNG |
 | 07 | [RBF 注意力 — 超越点积](tutorials/zh/07-rbf-attention.md) | 模型架构 | ~15 min | Mermaid + PNG |
 | 08 | [记忆机制与 KV Cache 优化](tutorials/zh/08-memory-kv-cache.md) | 推理优化 | ~20 min | Mermaid + PNG |
+| 09 | [简单自蒸馏 (SSD)](tutorials/zh/09-self-distillation.md) | 后训练 | ~20 min | Mermaid + GIF |
+| 10 | [SRPO — 统一 GRPO 与自蒸馏](tutorials/zh/10-sample-routing.md) | 后训练 | ~15 min | Mermaid + GIF |
+| 11 | [梯度提升注意力](tutorials/zh/11-gradient-boosted-attention.md) | 注意力机制 | ~15 min | Mermaid + GIF |
 
 ---
 
@@ -87,4 +93,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_16 tutorial files · 8 topics × 2 languages · 7,900+ lines of content · v4.0 format_
+_22 tutorial files · 11 topics × 2 languages · v4.0 format_
