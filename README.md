@@ -22,6 +22,7 @@
 | 10 | [SRPO — Unifying GRPO & Self-Distillation](tutorials/en/10-sample-routing.md) | Post-Training | ~15 min | Mermaid + GIF |
 | 11 | [Gradient Boosted Attention](tutorials/en/11-gradient-boosted-attention.md) | Attention | ~15 min | Mermaid + GIF |
 | 12 | [Early Stopping via Confidence Dynamics](tutorials/en/12-early-stopping.md) | Reasoning | ~15 min | Mermaid + GIF |
+| 13 | [Pluralistic Alignment](tutorials/en/13-pluralistic-alignment.md) | Alignment | ~15 min | Mermaid + GIF |
 
 ## 🇨🇳 Chinese Tutorials
 
@@ -39,6 +40,7 @@
 | 10 | [SRPO — 统一 GRPO 与自蒸馏](tutorials/zh/10-sample-routing.md) | 后训练 | ~15 min | Mermaid + GIF |
 | 11 | [梯度提升注意力](tutorials/zh/11-gradient-boosted-attention.md) | 注意力机制 | ~15 min | Mermaid + GIF |
 | 12 | [基于置信度动态的提前停止](tutorials/zh/12-early-stopping.md) | 推理模型 | ~15 min | Mermaid + GIF |
+| 13 | [多元对齐：捕捉多样化人类偏好](tutorials/zh/13-pluralistic-alignment.md) | 对齐 | ~15 min | Mermaid + GIF |
 
 ---
 
@@ -95,4 +97,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_24 tutorial files · 12 topics × 2 languages · v4.0 format_
+_26 tutorial files · 13 topics × 2 languages · v4.0 format_
