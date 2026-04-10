@@ -23,6 +23,7 @@
 | 11 | [Gradient Boosted Attention](tutorials/en/11-gradient-boosted-attention.md) | Attention | ~15 min | Mermaid + GIF |
 | 12 | [Early Stopping via Confidence Dynamics](tutorials/en/12-early-stopping.md) | Reasoning | ~15 min | Mermaid + GIF |
 | 13 | [Pluralistic Alignment](tutorials/en/13-pluralistic-alignment.md) | Alignment | ~15 min | Mermaid + GIF |
+| 14 | [SUPERNOVA — Natural Instruction RL](tutorials/en/14-supernova.md) | RL | ~15 min | Mermaid + GIF |
 
 ## 🇨🇳 Chinese Tutorials
 
@@ -41,6 +42,7 @@
 | 11 | [梯度提升注意力](tutorials/zh/11-gradient-boosted-attention.md) | 注意力机制 | ~15 min | Mermaid + GIF |
 | 12 | [基于置信度动态的提前停止](tutorials/zh/12-early-stopping.md) | 推理模型 | ~15 min | Mermaid + GIF |
 | 13 | [多元对齐：捕捉多样化人类偏好](tutorials/zh/13-pluralistic-alignment.md) | 对齐 | ~15 min | Mermaid + GIF |
+| 14 | [SUPERNOVA — 自然指令强化学习](tutorials/zh/14-supernova.md) | 强化学习 | ~15 min | Mermaid + GIF |
 
 ---
 
@@ -97,4 +99,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_26 tutorial files · 13 topics × 2 languages · v4.0 format_
+_28 tutorial files · 14 topics × 2 languages · v4.0 format_
