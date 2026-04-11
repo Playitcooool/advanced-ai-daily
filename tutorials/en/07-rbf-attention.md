@@ -6,7 +6,7 @@ category: "Attention Mechanisms"
 
 # Day 07: RBF Attention -- Radial Basis Function Attention Mechanisms
 
-> **Watch the animation**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/07-rbf-attention.webm" autoplay loop muted playsinline width="800"></video>
+> **Watch the animation**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/07-rbf-attention.webm" autoplay loop muted playsinline width="800"></video>
 
 ---
 

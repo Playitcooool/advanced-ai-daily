@@ -18,7 +18,7 @@ prerequisites:
   - "Basic knowledge of distributed training concepts"
 ---
 
-<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/02-moe.webm" autoplay loop muted playsinline width="800"></video>
+<video src="https://playitcooool.github.io/advanced-ai-daily/videos/02-moe.webm" autoplay loop muted playsinline width="800"></video>
 
 
 # Day 02: Mixture of Experts (MoE)

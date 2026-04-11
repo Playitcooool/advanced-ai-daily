@@ -6,7 +6,7 @@ category: "Multi-Agent Systems"
 
 # Day 05: 多智能体反思 -- 规划-执行-验证、反身性与辩论
 
-> **观看动画**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/05-multi-agent-reflection.webm" autoplay loop muted playsinline width="800"></video>
+> **观看动画**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/05-multi-agent-reflection.webm" autoplay loop muted playsinline width="800"></video>
 
 ---
 
@@ -16,7 +16,7 @@ category: "Multi-Agent Systems"
 
 ---
 
-<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/05-multi-agent-reflection.webm" autoplay loop muted playsinline width="800"></video>
+<video src="https://playitcooool.github.io/advanced-ai-daily/videos/05-multi-agent-reflection.webm" autoplay loop muted playsinline width="800"></video>
 
 
 ## 为什么这很重要

@@ -4,12 +4,12 @@ difficulty: "高级"
 category: "推理加速"
 ---
 
-<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
+<video src="https://playitcooool.github.io/advanced-ai-daily/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
 
 
 # 第 03 天：投机解码（Speculative Decoding）—— 无损推理加速
 
-> **观看动画演示**：<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
+> **观看动画演示**：<video src="https://playitcooool.github.io/advanced-ai-daily/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
 
 ## 快速参考
 
@@ -36,13 +36,13 @@ flowchart TD
     Context["当前上下文\nx_1 ... x_t"] --> DraftGen["草稿模型\nK 次自回归前向传播\n<小型、廉价、快速>"]
     DraftGen --> DraftOut["草稿 Token 及概率\nx_t+1 到 x_t+K\n附带概率 r_1 到 r_K"]
     DraftOut --> Verification["目标模型\n1 次前向传播\n验证 K+1 个位置\n<大型、昂贵>"]
-    Verification --> TargetProbs["目标概率\nq_1 ... q_K, q_K+1\nK+1 个词表分布"]
+    Verification --> TargetProbs["目标概率\nq_1 ... q_K, q_{K+1}\n(K+1) 个词表分布"]
 
     DraftOut --> AcceptCheck["接受/拒绝 循环\n对 i = 1 到 K:\n  alpha_i = min(1, q_i / r_i)\n  若 u < alpha_i 则接受"]
     TargetProbs --> AcceptCheck
 
     AcceptCheck --> AllAccepted{"全部接受？"}
-    AllAccepted -->|是 0-K| Bonus["从 q_K+1\n抽样额外 token"]
+    AllAccepted -->|是 0-K| Bonus["从 q_{K+1}\n抽样额外 token"]
     AllAccepted -->|否| Rejection["位置 j 被绝\n从残差分布抽样：\np_adj = max(0,q-r)/Z"]
     Bonus --> Output["输出：K+1 个新 token"]
     Rejection --> OutputRej["输出：j-1 个已接受 +\n1 个替换 token"]

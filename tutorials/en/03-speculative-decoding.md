@@ -4,12 +4,12 @@ difficulty: "Advanced"
 category: "Inference Acceleration"
 ---
 
-<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
+<video src="https://playitcooool.github.io/advanced-ai-daily/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
 
 
 # Day 03: Speculative Decoding -- Lossless Inference Speedup
 
-> **Watch the animation**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
+> **Watch the animation**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
 
 ## Quick Reference
 
@@ -36,13 +36,13 @@ flowchart TD
     Context["Current Context\nx_1 ... x_t"] --> DraftGen["Draft Model\nK autoregressive forward passes\n<small, cheap, fast>"]
     DraftGen --> DraftOut["Draft Tokens & Probs\nx_t+1 to x_t+K\nwith probabilities r_1 to r_K"]
     DraftOut --> Verification["Target Model\n1 forward pass\nverifying K+1 positions\n<large, expensive>"]
-    Verification --> TargetProbs["Target Probs\nq_1 ... q_K, q_K+1\nK+1 vocab distributions"]
+    Verification --> TargetProbs["Target Probs\nq_1 ... q_K, q_{K+1}\n(K+1) vocab distributions"]
 
     DraftOut --> AcceptCheck["Accept/Reject Loop\nfor i = 1 to K:\n  alpha_i = min(1, q_i / r_i)\n  accept if u < alpha_i"]
     TargetProbs --> AcceptCheck
 
     AcceptCheck --> AllAccepted{"ALL accepted?"}
-    AllAccepted -->|Yes (0-K)| Bonus["Sample bonus token\nfrom q_K+1"]
+    AllAccepted -->|Yes (0-K)| Bonus["Sample bonus token\nfrom q_{K+1}"]
     AllAccepted -->|No| Rejection["Rejection at position j\nSample residual:\np_adj = max(0,q-r)/Z"]
     Bonus --> Output["Output: K+1 new tokens"]
     Rejection --> OutputRej["Output: j-1 accepted +\n1 rejection sample"]

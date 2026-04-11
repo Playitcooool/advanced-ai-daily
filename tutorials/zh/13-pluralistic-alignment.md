@@ -14,7 +14,7 @@ prerequisites:
 published: true
 ---
 
-<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/13-pluralistic-alignment.webm" autoplay loop muted playsinline width="800"></video>
+<video src="https://playitcooool.github.io/advanced-ai-daily/videos/13-pluralistic-alignment.webm" autoplay loop muted playsinline width="800"></video>
 
 # Pluralistic Alignment（多元对齐）
 

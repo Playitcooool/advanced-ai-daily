@@ -17,7 +17,7 @@ prerequisites:
   - "Knowledge of PPO is helpful but not required"
 ---
 
-<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/01-grpo.webm" autoplay loop muted playsinline width="800"></video>
+<video src="https://playitcooool.github.io/advanced-ai-daily/videos/01-grpo.webm" autoplay loop muted playsinline width="800"></video>
 
 
 # Day 01: GRPO -- Group Relative Policy Optimization

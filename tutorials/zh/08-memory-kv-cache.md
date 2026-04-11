@@ -6,7 +6,7 @@ category: "Memory Management"
 
 # Day 08: 内存与 KV 缓存 -- 分页注意力、选择性逐出、混合精度与 TurboQuant KV 跳过
 
-> **观看动画**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/08-memory-kv-cache.webm" autoplay loop muted playsinline width="800"></video>
+> **观看动画**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/08-memory-kv-cache.webm" autoplay loop muted playsinline width="800"></video>
 
 ---
 

@@ -6,7 +6,7 @@ category: "智能体 / 强化学习"
 
 # Day 15: HDPO — 智能体模型中的元认知工具使用
 
-> **观看动画**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/15-hdpo.webm" autoplay loop muted playsinline width="800"></video>
+> **观看动画**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/15-hdpo.webm" autoplay loop muted playsinline width="800"></video>
 
 ---
 

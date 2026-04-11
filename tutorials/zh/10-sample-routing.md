@@ -6,7 +6,7 @@ category: "Post-Training"
 
 # Day 10: 样本路由策略优化（SRPO）-- 统一 GRPO 与自蒸馏
 
-> **观看动画**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/10-srpo.webm" autoplay loop muted playsinline width="800"></video>
+> **观看动画**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/10-srpo.webm" autoplay loop muted playsinline width="800"></video>
 
 ---
 
