@@ -4,7 +4,7 @@ difficulty: "高级"
 category: "推理策略"
 ---
 
-![算法动画](../../gifs/04-test-time-compute.gif)
+![算法动画](../gifs/04-test-time-compute.gif)
 
 
 # 第 04 天：测试时计算扩展（Test-Time Compute Scaling）—— 更多推理预算，更优输出

@@ -16,7 +16,7 @@ category: "Multi-Agent Systems"
 
 ---
 
-![算法动画](../../gifs/05-multi-agent-reflection.gif)
+![算法动画](../gifs/05-multi-agent-reflection.gif)
 
 
 ## 为什么这很重要

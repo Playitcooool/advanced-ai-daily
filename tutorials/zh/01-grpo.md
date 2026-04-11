@@ -17,7 +17,7 @@ prerequisites:
   - "了解 PPO 会有帮助但非必需"
 ---
 
-![算法动画](../../gifs/01-grpo.gif)
+![算法动画](../gifs/01-grpo.gif)
 
 
 # 第 01 天：GRPO —— 组相对策略优化

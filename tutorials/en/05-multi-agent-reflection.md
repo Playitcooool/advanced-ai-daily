@@ -16,7 +16,7 @@ Multi-agent reflection distributes cognitive labor across specialized agents -- 
 
 ---
 
-![Algorithm Animation](../../gifs/05-multi-agent-reflection.gif)
+![Algorithm Animation](../gifs/05-multi-agent-reflection.gif)
 
 
 ## Why This Matters

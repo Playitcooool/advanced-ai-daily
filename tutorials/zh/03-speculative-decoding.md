@@ -4,7 +4,7 @@ difficulty: "高级"
 category: "推理加速"
 ---
 
-![算法动画](../../gifs/03-speculative-decoding.gif)
+![算法动画](../gifs/03-speculative-decoding.gif)
 
 
 # 第 03 天：投机解码（Speculative Decoding）—— 无损推理加速
