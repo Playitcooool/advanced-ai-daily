@@ -25,6 +25,7 @@
 | 13 | [Pluralistic Alignment](tutorials/en/13-pluralistic-alignment.md) | Alignment | ~15 min | Mermaid + GIF |
 | 14 | [SUPERNOVA — Natural Instruction RL](tutorials/en/14-supernova.md) | RL | ~15 min | Mermaid + GIF |
 | 15 | [HDPO — Meta-Cognitive Tool Use](tutorials/en/15-hdpo.md) | Agent | ~15 min | Mermaid + GIF |
+| 16 | [Routing Distraction — "Seeing but Not Thinking"](tutorials/en/16-routing-distraction.md) | MoE + Multimodal | ~15 min | Mermaid + GIF |
 
 ## 🇨🇳 Chinese Tutorials
 
@@ -45,6 +46,7 @@
 | 13 | [多元对齐：捕捉多样化人类偏好](tutorials/zh/13-pluralistic-alignment.md) | 对齐 | ~15 min | Mermaid + GIF |
 | 14 | [SUPERNOVA — 自然指令强化学习](tutorials/zh/14-supernova.md) | 强化学习 | ~15 min | Mermaid + GIF |
 | 15 | [HDPO — 元认知工具使用](tutorials/zh/15-hdpo.md) | 智能体 | ~15 min | Mermaid + GIF |
+| 16 | [路由分心 — "看得见但不会思考"](tutorials/zh/16-routing-distraction.md) | MoE + 多模态 | ~15 min | Mermaid + GIF |
 
 ---
 
@@ -101,4 +103,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_30 tutorial files · 15 topics × 2 languages · v4.0 format_
+_32 tutorial files · 16 topics × 2 languages · v4.0 format_
