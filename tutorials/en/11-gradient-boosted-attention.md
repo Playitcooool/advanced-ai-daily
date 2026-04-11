@@ -7,9 +7,7 @@ paper: "Gradient Boosting within a Single Attention Layer"
 
 # Day 11: Gradient Boosting within a Single Attention Layer
 
-> **Watch the animation**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/11-gradient-boosted-attention.webm" autoplay loop muted playsinline width="800"></video>
-
----
+> **Watch the animation**: ![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/11-gradient-boosted-attention.gif)---
 
 ## One-Line Summary
 

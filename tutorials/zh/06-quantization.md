@@ -6,9 +6,7 @@ category: "Inference Optimization"
 
 # Day 06: 量化 -- GPTQ、AWQ、分组量化与 1-bit 大模型
 
-> **观看动画**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/06-quantization.webm" autoplay loop muted playsinline width="800"></video>
-
----
+> **观看动画**: ![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/06-quantization.gif)---
 
 ## 一句话摘要
 

@@ -7,9 +7,7 @@ paper: "Gradient Boosting within a Single Attention Layer"
 
 # Day 11: 单次注意力层内的梯度提升
 
-> **观看动画**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/11-gradient-boosted-attention.webm" autoplay loop muted playsinline width="800"></video>
-
----
+> **观看动画**: ![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/11-gradient-boosted-attention.gif)---
 
 ## 一句话总结
 

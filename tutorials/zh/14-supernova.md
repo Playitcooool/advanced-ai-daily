@@ -6,9 +6,7 @@ category: "强化学习 / 后训练"
 
 # 第 14 天：SUPERNOVA — 自然指令强化学习召唤通用推理能力
 
-> **观看动画**：<video src="https://playitcooool.github.io/advanced-ai-daily/videos/14-supernova.webm" autoplay loop muted playsinline width="800"></video>
-
----
+> **观看动画**：![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/14-supernova.gif)---
 
 ## 一句话总结
 

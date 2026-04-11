@@ -6,9 +6,7 @@ category: "RL / Post-Training"
 
 # Day 14: SUPERNOVA — Natural Instruction RL for General Reasoning
 
-> **Watch the animation**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/14-supernova.webm" autoplay loop muted playsinline width="800"></video>
-
----
+> **Watch the animation**: ![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/14-supernova.gif)---
 
 ## One-Line Summary
 

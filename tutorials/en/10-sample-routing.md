@@ -6,9 +6,7 @@ category: "Post-Training"
 
 # Day 10: Sample-Routed Policy Optimization (SRPO) -- Unifying GRPO and Self-Distillation
 
-> **Watch the animation**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/10-srpo.webm" autoplay loop muted playsinline width="800"></video>
-
----
+> **Watch the animation**: ![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/10-srpo.gif)---
 
 ## One-Line Summary
 

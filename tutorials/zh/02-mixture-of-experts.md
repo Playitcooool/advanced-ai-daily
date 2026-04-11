@@ -18,8 +18,7 @@ prerequisites:
   - "具备分布式训练的基础知识"
 ---
 
-<video src="https://playitcooool.github.io/advanced-ai-daily/videos/02-moe.webm" autoplay loop muted playsinline width="800"></video>
-
+![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/02-moe.gif)
 
 # 第 02 天：混合专家模型（MoE）
 

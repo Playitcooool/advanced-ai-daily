@@ -6,9 +6,7 @@ category: "Inference Optimization"
 
 # Day 06: Quantization -- GPTQ, AWQ, Per-Group, and 1-bit LLMs
 
-> **Watch the animation**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/06-quantization.webm" autoplay loop muted playsinline width="800"></video>
-
----
+> **Watch the animation**: ![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/06-quantization.gif)---
 
 ## One-Line Summary
 

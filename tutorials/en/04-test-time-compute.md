@@ -4,12 +4,11 @@ difficulty: "Advanced"
 category: "Inference Strategy"
 ---
 
-<video src="https://playitcooool.github.io/advanced-ai-daily/videos/04-test-time-compute.webm" autoplay loop muted playsinline width="800"></video>
-
+![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/04-test-time-compute.gif)
 
 # Day 04: Test-Time Compute Scaling -- More Inference Budget, Better Output
 
-> **Watch the animation**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/04-test-time-compute.webm" autoplay loop muted playsinline width="800"></video>
+> **Watch the animation**: ![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/04-test-time-compute.gif)
 
 ## Quick Reference
 

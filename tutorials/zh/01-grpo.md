@@ -17,8 +17,7 @@ prerequisites:
   - "了解 PPO 会有帮助但非必需"
 ---
 
-<video src="https://playitcooool.github.io/advanced-ai-daily/videos/01-grpo.webm" autoplay loop muted playsinline width="800"></video>
-
+![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/01-grpo.gif)
 
 # 第 01 天：GRPO —— 组相对策略优化
 

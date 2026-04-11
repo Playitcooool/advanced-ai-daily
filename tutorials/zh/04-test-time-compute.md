@@ -4,12 +4,11 @@ difficulty: "高级"
 category: "推理策略"
 ---
 
-<video src="https://playitcooool.github.io/advanced-ai-daily/videos/04-test-time-compute.webm" autoplay loop muted playsinline width="800"></video>
-
+![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/04-test-time-compute.gif)
 
 # 第 04 天：测试时计算扩展（Test-Time Compute Scaling）—— 更多推理预算，更优输出
 
-> **观看动画演示**：<video src="https://playitcooool.github.io/advanced-ai-daily/videos/04-test-time-compute.webm" autoplay loop muted playsinline width="800"></video>
+> **观看动画演示**：![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/04-test-time-compute.gif)
 
 ## 快速参考
 

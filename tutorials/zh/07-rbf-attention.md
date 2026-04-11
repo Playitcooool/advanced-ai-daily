@@ -6,9 +6,7 @@ category: "Attention Mechanisms"
 
 # Day 07: RBF 注意力 -- 径向基函数注意力机制
 
-> **观看动画**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/07-rbf-attention.webm" autoplay loop muted playsinline width="800"></video>
-
----
+> **观看动画**: ![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/07-rbf-attention.gif)---
 
 ## 一句话摘要
 

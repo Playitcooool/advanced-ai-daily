@@ -6,9 +6,7 @@ category: "Memory Management"
 
 # Day 08: Memory & KV Cache -- PagedAttention, Eviction, Mixed Precision, and TurboQuant KV Skip
 
-> **Watch the animation**: <video src="https://playitcooool.github.io/advanced-ai-daily/videos/08-memory-kv-cache.webm" autoplay loop muted playsinline width="800"></video>
-
----
+> **Watch the animation**: ![Animation](https://playitcooool.github.io/advanced-ai-daily/gifs/08-memory-kv-cache.gif)---
 
 ## One-Line Summary
 
