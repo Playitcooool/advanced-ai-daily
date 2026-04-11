@@ -65,14 +65,14 @@ GRPO replaces the learned Critic with a sampled baseline computed from a group o
 
 ```mermaid
 flowchart TD
-    A["Input Question q"] --> B["Sample G responses from pi_theta"]
+    A["Input Question q"] --> B["Sample G responses from pi-theta"]
     B --> C["Compute rewards r_1 ... r_G"]
     C --> D["Group Normalize: mu = mean(r)"]
     D --> E["Group Normalize: sigma = std(r)"]
     E --> F["Advantage: A_i = (r_i - mu) / sigma"]
     F --> G["Compute importance ratio rho"]
     G --> H["PPO-clip surrogate loss"]
-    H --> I["KL regularization vs pi_ref"]
+    H --> I["KL regularization vs pi-ref"]
     I --> J["Update theta via optimizer"]
 
     classDef input fill:#e1f5fe,stroke:#01579b

@@ -50,7 +50,7 @@ $$
 With entropy-aware dynamic weighting:
 
 $$
-w_j = (1 - H(p_j))^\alpha
+wj = (1 - H(p_j))^\alpha
 $$
 
 where $H(p_j)$ is the entropy of the distillation teacher's output, so high-entropy (less confident) targets are down-weighted.
@@ -156,7 +156,7 @@ where $H_{\text{norm}} = H(p) / \log |V|$ normalizes to [0, 1], and $\alpha$ con
 Let $D_{\text{corr}}$ be correct samples and $D_{\text{fail}}$ be failed samples:
 
 $$
-\mathcal{L}_{\text{SRPO}} = \mathbb{E}_{x} \left[ \underbrace{\sum_{i \in D_{\text{corr}}} \mathcal{L}_{\text{GRPO}}^{(i)}}_{\text{Reinforce correct}} + \underbrace{\sum_{j \in D_{\text{fail}}} w_j \cdot \mathcal{L}_{\text{SDPO}}^{(j)}}_{\text{Correct failures with entropy weighting}} \right]
+\mathcal{L}_{\text{SRPO}} = \mathbb{E}_{x} \left[ \underbrace{\sum_{i \in D_{\text{corr}}} \mathcal{L}_{\text{GRPO}}^{(i)}}_{\text{Reinforce correct}} + \underbrace{\sum_{j \in D_{\text{fail}}} wj \cdot \mathcal{L}_{\text{SDPO}}^{(j)}}_{\text{Correct failures with entropy weighting}} \right]
 $$
 
 This combines the best of both:

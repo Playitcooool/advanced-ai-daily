@@ -52,7 +52,7 @@ flowchart TD
     TargetProbs["Target Probs q1..qKplus1"]
     AcceptCheck["Accept if u less alpha_i"]
     AllAccepted{"All accepted?"}
-    Bonus["Sample from q_Kplus1"]
+    Bonus["Sample from qKplus1"]
     Rejection["Reject at j, sample residual"]
     Output["Output Kplus1 tokens"]
     OutputRej["Output j-1 + 1 rejection"]

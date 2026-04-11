@@ -124,13 +124,13 @@ $$
 The optimal quantization of each column minimizes:
 
 $$
-\min_q \sum_{j} (w_j - \hat{w}_j)^\top H (w_j - \hat{w}_j)
+\min_q \sum_{j} (wj - \hat{w}_j)^\top H (wj - \hat{w}_j)
 $$
 
 GPTQ processes columns sequentially, and after quantizing column $j$, updates all remaining columns to compensate:
 
 $$
-w_k \leftarrow w_k - \frac{H^{-1}_{:,j} H^{-1}_{j,j} (w_j - \hat{w}_j)}{[H^{-1}]_{jj}}
+w_k \leftarrow w_k - \frac{H^{-1}_{:,j} H^{-1}_{j,j} (wj - \hat{w}_j)}{[H^{-1}]_{jj}}
 $$
 
 This is equivalent to solving a weighted least-squares problem where the weighting matrix is the inverse Hessian, so columns with higher curvature (more important for the loss) get smaller quantization errors.

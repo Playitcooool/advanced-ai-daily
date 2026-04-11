@@ -52,7 +52,7 @@ flowchart TD
     TargetProbs["目标概率 q1..qKplus1"]
     AcceptCheck["接受/拒绝 循环"]
     AllAccepted{"全部接受？"}
-    Bonus["从 q_Kplus1 抽样"]
+    Bonus["从 qKplus1 抽样"]
     Rejection["位置 j 拒绝，残差抽样"]
     Output["输出 Kplus1 个 token"]
     OutputRej["输出 j-1 + 1 拒绝"]

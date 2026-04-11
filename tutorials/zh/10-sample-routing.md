@@ -50,7 +50,7 @@ $$
 带熵感知动态加权：
 
 $$
-w_j = (1 - H(p_j))^\alpha
+wj = (1 - H(p_j))^\alpha
 $$
 
 其中 $H(p_j)$ 是蒸馏教师输出的熵，因此高熵（不太可靠）的目标会被降权，而置信度高的目标会被加权。
@@ -156,7 +156,7 @@ $$
 设 $D_{\text{corr}}$ 为正确样本，$D_{\text{fail}}$ 为失败样本：
 
 $$
-\mathcal{L}_{\text{SRPO}} = \mathbb{E}_{x} \left[ \underbrace{\sum_{i \in D_{\text{corr}}} \mathcal{L}_{\text{GRPO}}^{(i)}}_{\text{强化正确}} + \underbrace{\sum_{j \in D_{\text{fail}}} w_j \cdot \mathcal{L}_{\text{SDPO}}^{(j)}}_{\text{用熵加权修正失败}} \right]
+\mathcal{L}_{\text{SRPO}} = \mathbb{E}_{x} \left[ \underbrace{\sum_{i \in D_{\text{corr}}} \mathcal{L}_{\text{GRPO}}^{(i)}}_{\text{强化正确}} + \underbrace{\sum_{j \in D_{\text{fail}}} wj \cdot \mathcal{L}_{\text{SDPO}}^{(j)}}_{\text{用熵加权修正失败}} \right]
 $$
 
 这结合了两种方法的最优：

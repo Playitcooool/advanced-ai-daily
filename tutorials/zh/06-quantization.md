@@ -124,13 +124,13 @@ $$
 每列的最优量化最小化以下目标：
 
 $$
-\min_q \sum_{j} (w_j - \hat{w}_j)^\top H (w_j - \hat{w}_j)
+\min_q \sum_{j} (wj - \hat{w}_j)^\top H (wj - \hat{w}_j)
 $$
 
 GPTQ 按列顺序处理，量化第 $j$ 列后，更新所有剩余列以补偿：
 
 $$
-w_k \leftarrow w_k - \frac{H^{-1}_{:,j} [H^{-1}]_{j,j}}{[H^{-1}]_{jj}} (w_j - \hat{w}_j)
+w_k \leftarrow w_k - \frac{H^{-1}_{:,j} [H^{-1}]_{j,j}}{[H^{-1}]_{jj}} (wj - \hat{w}_j)
 $$
 
 这等价于求解一个加权最小二乘问题，其中权重矩阵是逆 Hessian，因此曲率较高（对损失更重要）的列会获得更小的量化误差。

@@ -28,7 +28,7 @@ prerequisites:
 
 **Core formula:**
 
-$$y = \sum_{j=1}^{k} w_j \cdot \text{Expert}_{e_j}(h), \quad w_j = \frac{\text{softmax}(g)_j}{\sum_{m=1}^{k} \text{softmax}(g)_{e_m}}$$
+$$y = \sum_{j=1}^{k} wj \cdot \text{Expert}_{e_j}(h), \quad wj = \frac{\text{softmax}(g)_j}{\sum_{m=1}^{k} \text{softmax}(g)_{e_m}}$$
 
 **One-liner (PyTorch routing):**
 
@@ -67,14 +67,14 @@ MoE decouples these two scales. You can store hundreds of billions of parameters
 
 ```mermaid
 flowchart TD
-    A["Input Token h"] --> B["Router: gate = h @ W_router"]
+    A["Input Token h"] --> B["Router: gate = h @ W-router"]
     B --> C["Softmax: routing probs P"]
     C --> D["Top-K Selection: indices + weights"]
     D --> E["Load Balance Aux Loss"]
     D --> F["Dispatch tokens to experts"]
-    F --> G["Expert_1: FFN(h)"]
-    F --> H["Expert_k: FFN(h)"]
-    G --> I["Weight & combine: y = sum(w_j * E_j(h))"]
+    F --> G["Expert-1: FFN(h)"]
+    F --> H["Expert-k: FFN(h)"]
+    G --> I["Weight & combine: y = sum(wj * Ej(h))"]
     H --> I
     I --> J["Output y"]
 
@@ -110,7 +110,7 @@ Top-K selection picks the $k$ highest-probability experts and re-normalizes:
 
 $$T = \text{top-k}(P) = \{e_1, e_2, \ldots, e_k\}$$
 
-$$w_j = \frac{P_{e_j}}{\sum_{m=1}^{k} P_{e_m}}$$
+$$wj = \frac{P_{e_j}}{\sum_{m=1}^{k} P_{e_m}}$$
 
 The temperature parameter $\tau$ controls routing sharpness. Lower temperature gives confident routing (one expert dominates). Higher temperature gives softer routing (multiple experts contribute more evenly).
 
@@ -118,7 +118,7 @@ The temperature parameter $\tau$ controls routing sharpness. Lower temperature g
 
 The final output is the weighted sum of selected expert outputs:
 
-$$y = \sum_{j=1}^{k} w_j \cdot \text{Expert}_{e_j}(h)$$
+$$y = \sum_{j=1}^{k} wj \cdot \text{Expert}_{e_j}(h)$$
 
 Each expert is a standard feed-forward network:
 
