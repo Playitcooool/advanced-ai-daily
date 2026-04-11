@@ -390,9 +390,9 @@ def conditional_efficiency_advantage(
 ## References
 
 - [Act Wisely: Cultivating Meta-Cognitive Tool Use in Agentic Multimodal Models](https://arxiv.org/abs/2604.08545) — Yan et al., 2026
-- [Day 01: GRPO](/tutorials/en/01-grpo.md) — Group Relative Policy Optimization foundation
-- [Day 05: Multi-Agent Reflection](/tutorials/en/05-multi-agent-reflection.md) — Agent reasoning systems
-- [Day 14: SUPERNOVA](/tutorials/en/14-supernova.md) — RL for general reasoning
+- [Day 01: GRPO](/tutorials/en/rl-training/01-grpo.md) — Group Relative Policy Optimization foundation
+- [Day 05: Multi-Agent Reflection](/tutorials/en/agent/05-multi-agent-reflection.md) — Agent reasoning systems
+- [Day 14: SUPERNOVA](/tutorials/en/architecture/14-supernova.md) — RL for general reasoning
 
 ---
 

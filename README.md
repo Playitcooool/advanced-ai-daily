@@ -8,45 +8,129 @@
 
 ## 🇬🇧 English Tutorials
 
-| # | Topic | Category | Time | Visual |
-|:--|:------|:---------|:----:|:------:|
-| 01 | [GRPO — Group Relative Policy Optimization](tutorials/en/01-grpo.md) | RL | ~15 min | Mermaid + GIF |
-| 02 | [MoE — Mixture of Experts](tutorials/en/02-mixture-of-experts.md) | Architecture | ~20 min | Mermaid + GIF |
-| 03 | [Speculative Decoding](tutorials/en/03-speculative-decoding.md) | Inference | ~15 min | Mermaid + GIF |
-| 04 | [Test-Time Compute Scaling](tutorials/en/04-test-time-compute.md) | Inference | ~20 min | Mermaid + GIF |
-| 05 | [Multi-Agent Reflection](tutorials/en/05-multi-agent-reflection.md) | Agent | ~20 min | Mermaid + GIF |
-| 06 | [Quantization — TurboQuant & 1-bit LLMs](tutorials/en/06-quantization.md) | Inference | ~15 min | Mermaid + PNG |
-| 07 | [RBF Attention](tutorials/en/07-rbf-attention.md) | Architecture | ~15 min | Mermaid + PNG |
-| 08 | [Memory & KV Cache](tutorials/en/08-memory-kv-cache.md) | Inference | ~20 min | Mermaid + PNG |
-| 09 | [Simple Self-Distillation (SSD)](tutorials/en/09-self-distillation.md) | Post-Training | ~20 min | Mermaid + GIF |
-| 10 | [SRPO — Unifying GRPO & Self-Distillation](tutorials/en/10-sample-routing.md) | Post-Training | ~15 min | Mermaid + GIF |
-| 11 | [Gradient Boosted Attention](tutorials/en/11-gradient-boosted-attention.md) | Attention | ~15 min | Mermaid + GIF |
-| 12 | [Early Stopping via Confidence Dynamics](tutorials/en/12-early-stopping.md) | Reasoning | ~15 min | Mermaid + GIF |
-| 13 | [Pluralistic Alignment](tutorials/en/13-pluralistic-alignment.md) | Alignment | ~15 min | Mermaid + GIF |
-| 14 | [SUPERNOVA — Natural Instruction RL](tutorials/en/14-supernova.md) | RL | ~15 min | Mermaid + GIF |
-| 15 | [HDPO — Meta-Cognitive Tool Use](tutorials/en/15-hdpo.md) | Agent | ~15 min | Mermaid + GIF |
-| 16 | [Routing Distraction — "Seeing but Not Thinking"](tutorials/en/16-routing-distraction.md) | MoE + Multimodal | ~15 min | Mermaid + GIF |
+### RL Training
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 01 | [GRPO — Group Relative Policy Optimization](tutorials/en/rl-training/01-grpo.md) | ~15 min | Mermaid + GIF |
+| 15 | [HDPO — Meta-Cognitive Tool Use](tutorials/en/rl-training/15-hdpo.md) | ~15 min | Mermaid + GIF |
+
+### Mixture of Experts
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 02 | [MoE — Mixture of Experts](tutorials/en/moe/02-mixture-of-experts.md) | ~20 min | Mermaid + GIF |
+| 16 | [Routing Distraction — "Seeing but Not Thinking"](tutorials/en/moe/16-routing-distraction.md) | ~15 min | Mermaid + GIF |
+
+### Inference Optimization
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 03 | [Speculative Decoding](tutorials/en/inference/03-speculative-decoding.md) | ~15 min | Mermaid + GIF |
+| 04 | [Test-Time Compute Scaling](tutorials/en/inference/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
+| 12 | [Early Stopping via Confidence Dynamics](tutorials/en/inference/12-early-stopping.md) | ~15 min | Mermaid + GIF |
+
+### Attention Mechanisms
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 07 | [RBF Attention](tutorials/en/attention/07-rbf-attention.md) | ~15 min | Mermaid + PNG |
+| 11 | [Gradient Boosted Attention](tutorials/en/attention/11-gradient-boosted-attention.md) | ~15 min | Mermaid + GIF |
+
+### Agent Systems
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 05 | [Multi-Agent Reflection](tutorials/en/agent/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
+
+### Memory & KV Cache
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 08 | [Memory & KV Cache](tutorials/en/memory/08-memory-kv-cache.md) | ~20 min | Mermaid + PNG |
+
+### Knowledge Distillation
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 09 | [Simple Self-Distillation (SSD)](tutorials/en/distillation/09-self-distillation.md) | ~20 min | Mermaid + GIF |
+
+### Routing & Sampling
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 10 | [SRPO — Unifying GRPO & Self-Distillation](tutorials/en/routing/10-sample-routing.md) | ~15 min | Mermaid + GIF |
+
+### Alignment
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 13 | [Pluralistic Alignment](tutorials/en/alignment/13-pluralistic-alignment.md) | ~15 min | Mermaid + GIF |
+
+### Model Architecture
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 14 | [SUPERNOVA — Natural Instruction RL](tutorials/en/architecture/14-supernova.md) | ~15 min | Mermaid + GIF |
+
+### Quantization
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 06 | [Quantization — TurboQuant & 1-bit LLMs](tutorials/en/quantization/06-quantization.md) | ~15 min | Mermaid + PNG |
+
+---
 
 ## 🇨🇳 Chinese Tutorials
 
-| # | Topic | Category | Time | Visual |
-|:--|:------|:---------|:----:|:------:|
-| 01 | [GRPO — 组相对策略优化](tutorials/zh/01-grpo.md) | 强化学习 | ~15 min | Mermaid + GIF |
-| 02 | [MoE — 混合专家架构](tutorials/zh/02-mixture-of-experts.md) | 模型架构 | ~20 min | Mermaid + GIF |
-| 03 | [投机解码](tutorials/zh/03-speculative-decoding.md) | 推理优化 | ~15 min | Mermaid + GIF |
-| 04 | [推理时计算扩展](tutorials/zh/04-test-time-compute.md) | 推理优化 | ~20 min | Mermaid + GIF |
-| 05 | [多智能体反思系统](tutorials/zh/05-multi-agent-reflection.md) | 智能体 | ~20 min | Mermaid + GIF |
-| 06 | [模型量化 — TurboQuant 与 1-bit 大模型](tutorials/zh/06-quantization.md) | 推理优化 | ~15 min | Mermaid + PNG |
-| 07 | [RBF 注意力 — 超越点积](tutorials/zh/07-rbf-attention.md) | 模型架构 | ~15 min | Mermaid + PNG |
-| 08 | [记忆机制与 KV Cache 优化](tutorials/zh/08-memory-kv-cache.md) | 推理优化 | ~20 min | Mermaid + PNG |
-| 09 | [简单自蒸馏 (SSD)](tutorials/zh/09-self-distillation.md) | 后训练 | ~20 min | Mermaid + GIF |
-| 10 | [SRPO — 统一 GRPO 与自蒸馏](tutorials/zh/10-sample-routing.md) | 后训练 | ~15 min | Mermaid + GIF |
-| 11 | [梯度提升注意力](tutorials/zh/11-gradient-boosted-attention.md) | 注意力机制 | ~15 min | Mermaid + GIF |
-| 12 | [基于置信度动态的提前停止](tutorials/zh/12-early-stopping.md) | 推理模型 | ~15 min | Mermaid + GIF |
-| 13 | [多元对齐：捕捉多样化人类偏好](tutorials/zh/13-pluralistic-alignment.md) | 对齐 | ~15 min | Mermaid + GIF |
-| 14 | [SUPERNOVA — 自然指令强化学习](tutorials/zh/14-supernova.md) | 强化学习 | ~15 min | Mermaid + GIF |
-| 15 | [HDPO — 元认知工具使用](tutorials/zh/15-hdpo.md) | 智能体 | ~15 min | Mermaid + GIF |
-| 16 | [路由分心 — "看得见但不会思考"](tutorials/zh/16-routing-distraction.md) | MoE + 多模态 | ~15 min | Mermaid + GIF |
+### 强化学习训练 (RL Training)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 01 | [GRPO — 组相对策略优化](tutorials/zh/rl-training/01-grpo.md) | ~15 min | Mermaid + GIF |
+| 15 | [HDPO — 元认知工具使用](tutorials/zh/rl-training/15-hdpo.md) | ~15 min | Mermaid + GIF |
+
+### 混合专家系统 (Mixture of Experts)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 02 | [MoE — 混合专家架构](tutorials/zh/moe/02-mixture-of-experts.md) | ~20 min | Mermaid + GIF |
+| 16 | [路由分心 — "看得见但不会思考"](tutorials/zh/moe/16-routing-distraction.md) | ~15 min | Mermaid + GIF |
+
+### 推理优化 (Inference Optimization)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 03 | [投机解码](tutorials/zh/inference/03-speculative-decoding.md) | ~15 min | Mermaid + GIF |
+| 04 | [推理时计算扩展](tutorials/zh/inference/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
+| 12 | [基于置信度动态的提前停止](tutorials/zh/inference/12-early-stopping.md) | ~15 min | Mermaid + GIF |
+
+### 注意力机制 (Attention Mechanisms)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 07 | [RBF 注意力 — 超越点积](tutorials/zh/attention/07-rbf-attention.md) | ~15 min | Mermaid + PNG |
+| 11 | [梯度提升注意力](tutorials/zh/attention/11-gradient-boosted-attention.md) | ~15 min | Mermaid + GIF |
+
+### 智能体系统 (Agent Systems)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 05 | [多智能体反思系统](tutorials/zh/agent/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
+
+### 记忆与缓存 (Memory & KV Cache)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 08 | [记忆机制与 KV Cache 优化](tutorials/zh/memory/08-memory-kv-cache.md) | ~20 min | Mermaid + PNG |
+
+### 知识蒸馏 (Knowledge Distillation)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 09 | [简单自蒸馏 (SSD)](tutorials/zh/distillation/09-self-distillation.md) | ~20 min | Mermaid + GIF |
+
+### 路由与采样 (Routing & Sampling)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 10 | [SRPO — 统一 GRPO 与自蒸馏](tutorials/zh/routing/10-sample-routing.md) | ~15 min | Mermaid + GIF |
+
+### 对齐 (Alignment)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 13 | [多元对齐：捕捉多样化人类偏好](tutorials/zh/alignment/13-pluralistic-alignment.md) | ~15 min | Mermaid + GIF |
+
+### 模型架构 (Model Architecture)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 14 | [SUPERNOVA — 自然指令强化学习](tutorials/zh/architecture/14-supernova.md) | ~15 min | Mermaid + GIF |
+
+### 量化 (Quantization)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 06 | [模型量化 — TurboQuant 与 1-bit 大模型](tutorials/zh/quantization/06-quantization.md) | ~15 min | Mermaid + PNG |
 
 ---
 
@@ -70,13 +154,24 @@ Every tutorial (EN + ZH) includes:
 ```
 advanced-ai-daily/
 ├── tutorials/
-│   ├── en/               # Pure English tutorials (v4.0 format)
-│   └── zh/               # Pure Chinese tutorials (v4.0 format)
-├── gifs/                 # Animated GIFs (GitHub-native)
-├── diagrams/             # Architecture diagrams (PNG fallback)
+│   ├── en/
+│   │   ├── rl-training/     # GRPO, HDPO
+│   │   ├── moe/            # Mixture of Experts, Routing Distraction
+│   │   ├── inference/       # Speculative Decoding, Test-Time Compute, Early Stopping
+│   │   ├── attention/       # RBF Attention, Gradient Boosted Attention
+│   │   ├── agent/           # Multi-Agent Reflection
+│   │   ├── memory/          # Memory & KV Cache
+│   │   ├── distillation/    # Self-Distillation
+│   │   ├── routing/         # Sample Routing
+│   │   ├── alignment/       # Pluralistic Alignment
+│   │   ├── architecture/   # SUPERNOVA
+│   │   └── quantization/    # Quantization
+│   └── zh/                  # (mirrors en/ structure)
+├── gifs/                    # Animated GIFs
+├── diagrams/                # Architecture diagrams (PNG fallback)
 └── references/
-    ├── verified-papers.json       # 25 verified arXiv papers
-    └── keyword-database.json      # Topic coverage tracking
+    ├── verified-papers.json
+    └── keyword-database.json
 ```
 
 ## Design Principles
@@ -103,4 +198,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_32 tutorial files · 16 topics × 2 languages · v4.0 format_
+_32 tutorial files · 16 topics × 2 languages · categorized format_

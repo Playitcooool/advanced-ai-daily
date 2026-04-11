@@ -390,9 +390,9 @@ def conditional_efficiency_advantage(
 ## 参考文献
 
 - [Act Wisely: Cultivating Meta-Cognitive Tool Use in Agentic Multimodal Models](https://arxiv.org/abs/2604.08545) — Yan et al., 2026
-- [Day 01: GRPO](/tutorials/zh/01-grpo.md) — 组相对策略优化基础
-- [Day 05: 多智能体反思系统](/tutorials/zh/05-multi-agent-reflection.md) — 智能体推理系统
-- [Day 14: SUPERNOVA](/tutorials/zh/14-supernova.md) — 用于通用推理的强化学习
+- [Day 01: GRPO](/tutorials/zh/rl-training/01-grpo.md) — 组相对策略优化基础
+- [Day 05: 多智能体反思系统](/tutorials/zh/agent/05-multi-agent-reflection.md) — 智能体推理系统
+- [Day 14: SUPERNOVA](/tutorials/zh/architecture/14-supernova.md) — 用于通用推理的强化学习
 
 ---
 

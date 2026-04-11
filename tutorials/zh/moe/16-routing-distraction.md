@@ -14,8 +14,8 @@
 
 ### 相关教程
 
-- [第 02 天: 混合专家系统](/tutorials/zh/02-mixture-of-experts.md) — MoE 基础（专家、路由、top-k）
-- [第 07 天: RBF 注意力](/tutorials/zh/07-rbf-attention.md) — 注意力的路由机制
+- [第 02 天: 混合专家系统](/tutorials/zh/moe/02-mixture-of-experts.md) — MoE 基础（专家、路由、top-k）
+- [第 07 天: RBF 注意力](/tutorials/zh/attention/07-rbf-attention.md) — 注意力的路由机制
 
 ### 为什么会引起关注
 
@@ -241,5 +241,5 @@ if __name__ == "__main__":
 ## 参考文献 | References
 
 - **论文**: [Seeing but Not Thinking: Routing Distraction in Multimodal Mixture-of-Experts](https://arxiv.org/abs/2604.08541) — Xu et al., 2026-04-09
-- **相关（第 02 天）**: [混合专家系统](/tutorials/zh/02-mixture-of-experts.md)
-- **相关（第 07 天）**: [RBF 注意力](/tutorials/zh/07-rbf-attention.md)
+- **相关（第 02 天）**: [混合专家系统](/tutorials/zh/moe/02-mixture-of-experts.md)
+- **相关（第 07 天）**: [RBF 注意力](/tutorials/zh/attention/07-rbf-attention.md)

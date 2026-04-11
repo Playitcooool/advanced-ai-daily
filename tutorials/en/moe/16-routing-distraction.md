@@ -16,8 +16,8 @@ Multimodal MoE models suffer from a "Seeing but Not Thinking" failure: they perc
 
 ### Related Tutorials | 相关教程
 
-- [Day 02: Mixture of Experts](/tutorials/en/02-mixture-of-experts.md) — MoE fundamentals (experts, routing, top-k)
-- [Day 07: RBF Attention](/tutorials/en/07-rbf-attention.md) — routing mechanisms in attention
+- [Day 02: Mixture of Experts](/tutorials/en/moe/02-mixture-of-experts.md) — MoE fundamentals (experts, routing, top-k)
+- [Day 07: RBF Attention](/tutorials/en/attention/07-rbf-attention.md) — routing mechanisms in attention
 
 ### Why This Matters | 为什么重要
 
@@ -243,5 +243,5 @@ if __name__ == "__main__":
 ## References | 参考文献
 
 - **Paper**: [Seeing but Not Thinking: Routing Distraction in Multimodal Mixture-of-Experts](https://arxiv.org/abs/2604.08541) — Xu et al., 2026-04-09
-- **Related (Day 02)**: [Mixture of Experts](/tutorials/en/02-mixture-of-experts.md)
-- **Related (Day 07)**: [RBF Attention](/tutorials/en/07-rbf-attention.md)
+- **Related (Day 02)**: [Mixture of Experts](/tutorials/en/moe/02-mixture-of-experts.md)
+- **Related (Day 07)**: [RBF Attention](/tutorials/en/attention/07-rbf-attention.md)
