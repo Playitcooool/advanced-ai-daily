@@ -6,7 +6,7 @@ category: "RL / Post-Training"
 
 # Day 14: SUPERNOVA — Natural Instruction RL for General Reasoning
 
-> **Watch the animation**: ![SUPERNOVA Animation](../gifs/14-supernova.gif)
+> **Watch the animation**: ![SUPERNOVA Animation](../../gifs/14-supernova.gif)
 
 ---
 

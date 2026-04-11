@@ -14,7 +14,7 @@ prerequisites:
 published: true
 ---
 
-![Pluralistic Alignment Animation](../gifs/13-pluralistic-alignment.gif)
+![Pluralistic Alignment Animation](../../gifs/13-pluralistic-alignment.gif)
 
 # Pluralistic Alignment（多元对齐）
 

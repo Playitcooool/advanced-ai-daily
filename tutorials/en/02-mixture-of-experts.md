@@ -18,7 +18,7 @@ prerequisites:
   - "Basic knowledge of distributed training concepts"
 ---
 
-![Algorithm Animation](../gifs/02-moe.gif)
+![Algorithm Animation](../../gifs/02-moe.gif)
 
 
 # Day 02: Mixture of Experts (MoE)

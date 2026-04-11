@@ -6,7 +6,7 @@ category: "Attention Mechanisms"
 
 # Day 07: RBF Attention -- Radial Basis Function Attention Mechanisms
 
-> **Watch the animation**: ![RBF Attention Animation](../gifs/07-rbf-attention.gif)
+> **Watch the animation**: ![RBF Attention Animation](../../gifs/07-rbf-attention.gif)
 
 ---
 

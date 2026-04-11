@@ -6,7 +6,7 @@ category: "强化学习 / 后训练"
 
 # 第 14 天：SUPERNOVA — 自然指令强化学习召唤通用推理能力
 
-> **观看动画**：![SUPERNOVA 动画](../gifs/14-supernova.gif)
+> **观看动画**：![SUPERNOVA 动画](../../gifs/14-supernova.gif)
 
 ---
 

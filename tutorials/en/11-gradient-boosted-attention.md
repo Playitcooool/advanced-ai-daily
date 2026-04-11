@@ -7,7 +7,7 @@ paper: "Gradient Boosting within a Single Attention Layer"
 
 # Day 11: Gradient Boosting within a Single Attention Layer
 
-> **Watch the animation**: ![Gradient Boosted Attention Animation](../gifs/11-gradient-boosted-attention.gif)
+> **Watch the animation**: ![Gradient Boosted Attention Animation](../../gifs/11-gradient-boosted-attention.gif)
 
 ---
 

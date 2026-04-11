@@ -6,7 +6,7 @@ category: "Inference Optimization"
 
 # Day 06: 量化 -- GPTQ、AWQ、分组量化与 1-bit 大模型
 
-> **观看动画**: ![量化动画](../gifs/06-quantization.gif)
+> **观看动画**: ![量化动画](../../gifs/06-quantization.gif)
 
 ---
 

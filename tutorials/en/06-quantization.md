@@ -6,7 +6,7 @@ category: "Inference Optimization"
 
 # Day 06: Quantization -- GPTQ, AWQ, Per-Group, and 1-bit LLMs
 
-> **Watch the animation**: ![Quantization Animation](../gifs/06-quantization.gif)
+> **Watch the animation**: ![Quantization Animation](../../gifs/06-quantization.gif)
 
 ---
 

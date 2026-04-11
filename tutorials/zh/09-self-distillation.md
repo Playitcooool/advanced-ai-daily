@@ -6,7 +6,7 @@ category: "Post-Training"
 
 # Day 09: 简单自蒸馏（SSD）-- 无需验证器或 RL 即可提升代码生成能力
 
-> **观看动画**: ![SSD 动画](../gifs/09-self-distillation.gif)
+> **观看动画**: ![SSD 动画](../../gifs/09-self-distillation.gif)
 
 ---
 

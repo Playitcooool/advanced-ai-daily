@@ -7,7 +7,7 @@ paper: "Early Stopping for Large Reasoning Models via Confidence Dynamics"
 
 # Day 12: Early Stopping for Large Reasoning Models via Confidence Dynamics
 
-> **Watch the animation**: ![Early Stopping Animation](../gifs/12-early-stopping.gif)
+> **Watch the animation**: ![Early Stopping Animation](../../gifs/12-early-stopping.gif)
 
 ---
 

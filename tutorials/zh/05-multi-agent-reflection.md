@@ -6,7 +6,7 @@ category: "Multi-Agent Systems"
 
 # Day 05: 多智能体反思 -- 规划-执行-验证、反身性与辩论
 
-> **观看动画**: ![多智能体反思动画](../gifs/05-multi-agent-reflection.gif)
+> **观看动画**: ![多智能体反思动画](../../gifs/05-multi-agent-reflection.gif)
 
 ---
 
@@ -16,7 +16,7 @@ category: "Multi-Agent Systems"
 
 ---
 
-![算法动画](../gifs/05-multi-agent-reflection.gif)
+![算法动画](../../gifs/05-multi-agent-reflection.gif)
 
 
 ## 为什么这很重要

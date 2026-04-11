@@ -6,7 +6,7 @@ category: "智能体 / 强化学习"
 
 # Day 15: HDPO — 智能体模型中的元认知工具使用
 
-> **观看动画**: ![HDPO 动画](../gifs/15-hdpo.gif)
+> **观看动画**: ![HDPO 动画](../../gifs/15-hdpo.gif)
 
 ---
 

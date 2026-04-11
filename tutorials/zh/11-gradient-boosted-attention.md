@@ -7,7 +7,7 @@ paper: "Gradient Boosting within a Single Attention Layer"
 
 # Day 11: 单次注意力层内的梯度提升
 
-> **观看动画**: ![梯度提升注意力动画](../gifs/11-gradient-boosted-attention.gif)
+> **观看动画**: ![梯度提升注意力动画](../../gifs/11-gradient-boosted-attention.gif)
 
 ---
 
