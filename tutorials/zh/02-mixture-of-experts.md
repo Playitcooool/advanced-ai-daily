@@ -100,11 +100,11 @@ flowchart TD
 
 对于每个输入 token $h$，路由器在所有 $N$ 个专家上计算选择分数：
 
-$$\text{gate\_logits} = h \cdot W_{\text{router}}$$
+$$\texttt{gate-logits} = h \cdot W_{\text{router}}$$
 
 其中 $W_{\text{router}}$ 的形状为 $(d_{\text{model}}, N)$。通过 softmax 获取路由概率：
 
-$$P = \text{softmax}\left(\frac{\text{gate\_logits}}{\tau}\right)$$
+$$P = \text{softmax}\left(\frac{\texttt{gate-logits}}{\tau}\right)$$
 
 Top-K 选择选取概率最高的 $k$ 个专家并重新归一化：
 

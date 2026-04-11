@@ -20,7 +20,7 @@ SUPERNOVA extends RLVR (Reinforcement Learning with Verifiable Rewards) from for
 
 Reinforcement Learning with Verifiable Rewards (RLVR) — the technique behind GRPO (Day 01) and SRPO (Day 10) — has been remarkably successful for formal reasoning domains:
 
-$$\text{Reward}_{\text{formal}} = \mathbb{1}[\text{answer} = \text{ground\_truth}]$$
+$$\text{Reward}_{\text{formal}} = \mathbb{1}[\text{answer} = \texttt{ground}]$$
 
 **Math problems**: Every answer is either right or wrong. Unambiguous.
 **Code generation**: Execute the code against a test suite. Pass/fail. Binary and exact.
@@ -128,7 +128,7 @@ The key difference from GRPO: natural rewards have **variance within both correc
 
 To prevent reward hacking (gaming the judge), SUPERNOVA adds a coverage penalty:
 
-$$\mathcal{L}_{\text{coverage}} = -\lambda \cdot \text{Entropy}\left(\text{skill\_distribution}(x)\right)$$
+$$\mathcal{L}_{\text{coverage}} = -\lambda \cdot \text{Entropy}\left(\texttt{skill}(x)\right)$$
 
 This ensures the model improves across **all reasoning dimensions**, not just the easiest ones. Without it, the model could maximize average score by excelling only at one skill type.
 

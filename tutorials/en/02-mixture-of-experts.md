@@ -100,11 +100,11 @@ Each token follows a sparse path: the router selects only K out of N experts. Th
 
 For each input token $h$, the router computes selection scores across all $N$ experts:
 
-$$\text{gate\_logits} = h \cdot W_{\text{router}}$$
+$$\texttt{gate-logits} = h \cdot W_{\text{router}}$$
 
 where $W_{\text{router}}$ has shape $(d_{\text{model}}, N)$. The routing probabilities are obtained via softmax:
 
-$$P = \text{softmax}\left(\frac{\text{gate\_logits}}{\tau}\right)$$
+$$P = \text{softmax}\left(\frac{\texttt{gate-logits}}{\tau}\right)$$
 
 Top-K selection picks the $k$ highest-probability experts and re-normalizes:
 

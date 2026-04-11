@@ -21,7 +21,7 @@ The KV cache in autoregressive transformers grows linearly with sequence length 
 During autoregressive generation, the transformer must process every previously generated token at each step. To avoid re-computing the expensive key and value projections for all prior tokens, we cache them in a **KV cache**:
 
 $$
-\text{KV cache size} = 2 \times \text{num\_layers} \times \text{num\_heads} \times \text{seq\_len} \times \text{head\_dim} \times \text{bytes\_per\_element}
+\text{KV cache size} = 2 \times \texttt{num} \times \texttt{num} \times \texttt{seq} \times \texttt{head} \times \texttt{bytes}
 $$
 
 For a 7B model with 32 layers, 32 heads, head_dim=128, and FP16 (2 bytes):
@@ -168,11 +168,11 @@ INT4 KV cache is more aggressive but requires careful per-token or per-head scal
 GEAR (Kweon et al., 2024) learns an eviction policy using a lightweight neural network that predicts which tokens to evict based on:
 
 $$
-\text{evict\_score}_i = f_{\text{policy}}(K_i, V_i, \text{attention\_scores}_i, \text{positional\_encoding}_i)
+\texttt{evict}_i = f_{\text{policy}}(K_i, V_i, \texttt{attention}_i, \texttt{positional}_i)
 $$
 
 $$
-\text{Keep top-}k \text{ tokens by } 1 - \text{evict\_score}_i
+\text{Keep top-}k \text{ tokens by } 1 - \texttt{evict}_i
 $$
 
 This is more sophisticated than simple LRU (least recently used) eviction because it considers the actual importance of each token in the attention computation.
