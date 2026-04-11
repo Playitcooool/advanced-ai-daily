@@ -33,25 +33,31 @@ Autoregressive language models are fundamentally **memory-bandwidth bound**, not
 
 ```mermaid
 flowchart TD
-    Context["Current Context\nx_1 ... x_t"] --> DraftGen["Draft Model\nK autoregressive forward passes\n<small, cheap, fast>"]
-    DraftGen --> DraftOut["Draft Tokens & Probs\nx_t+1 to x_t+K\nwith probabilities r_1 to r_K"]
-    DraftOut --> Verification["Target Model\n1 forward pass\nverifying K+1 positions\n<large, expensive>"]
-    Verification --> TargetProbs["Target Probs\nq_1 ... q_K, q_{K+1}\n(K+1) vocab distributions"]
-
-    DraftOut --> AcceptCheck["Accept/Reject Loop\nfor i = 1 to K:\n  alpha_i = min(1, q_i / r_i)\n  accept if u < alpha_i"]
+    Context --> DraftGen
+    DraftGen --> DraftOut
+    DraftOut --> Verification
+    Verification --> TargetProbs
+    DraftOut --> AcceptCheck
     TargetProbs --> AcceptCheck
+    AcceptCheck --> AllAccepted
+    AllAccepted -->|YES| Bonus
+    AllAccepted -->|NO| Rejection
+    Bonus --> Output
+    Rejection --> OutputRej
+    OutputContext --> DraftGen
 
-    AcceptCheck --> AllAccepted{"ALL accepted?"}
-    AllAccepted -->|Yes (0-K)| Bonus["Sample bonus token\nfrom q_{K+1}"]
-    AllAccepted -->|No| Rejection["Rejection at position j\nSample residual:\np_adj = max(0,q-r)/Z"]
-    Bonus --> Output["Output: K+1 new tokens"]
-    Rejection --> OutputRej["Output: j-1 accepted +\n1 rejection sample"]
-
-    OutputContext["New Context\nx_1 ... x_t + new tokens"] --> DraftGen
-
-    style DraftGen fill:#e1f5e1
-    style Verification fill:#ffe1e1
-    style AcceptCheck fill:#fff3cd
+    Context["Current Context"]
+    DraftGen["Draft Model K passes"]
+    DraftOut["Draft Tokens r1..rK"]
+    Verification["Target Model 1 pass"]
+    TargetProbs["Target Probs q1..qKplus1"]
+    AcceptCheck["Accept if u less alpha_i"]
+    AllAccepted{"All accepted?"}
+    Bonus["Sample from q_Kplus1"]
+    Rejection["Reject at j, sample residual"]
+    Output["Output Kplus1 tokens"]
+    OutputRej["Output j-1 + 1 rejection"]
+    OutputContext["New Context"]
 ```
 
 ## The Math
@@ -383,27 +389,11 @@ if __name__ == "__main__":
 
 ```mermaid
 flowchart LR
-    subgraph Draft Strategies
-        A["Classic SpecDec\nSeparate small model\nHighest accuracy"]
-        B["Medusa\nMulti-head on target\nNo separate model"]
-        C["EAGLE\nFeature-based drafting\nRich intermediate reps"]
-        D["Lookahead\nN-gram cache\nNo training needed"]
-    end
-
-    subgraph Shared Verification
-        V["Target Model Verification\nAccept/Reject with\nalpha = min(1, q/r)\nLossless guarantee"]
-    end
-
-    A --> V
-    B --> V
-    C --> V
-    D --> V
-
-    style A fill:#e1f5e1
-    style B fill:#e1f5e1
-    style C fill:#e1f5e1
-    style D fill:#e1f5e1
-    style V fill:#fff3cd
+    A[Classic SpecDec] --> V
+    B[Medusa] --> V
+    C[EAGLE] --> V
+    D[Lookahead] --> V
+    V[Target Model Verification]
 ```
 
 | Variant | Draft Mechanism | Acceptance Rate | Training Required | Distribution Guarantee |

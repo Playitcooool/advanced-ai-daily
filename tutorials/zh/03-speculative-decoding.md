@@ -33,25 +33,31 @@ category: "推理加速"
 
 ```mermaid
 flowchart TD
-    Context["当前上下文\nx_1 ... x_t"] --> DraftGen["草稿模型\nK 次自回归前向传播\n<小型、廉价、快速>"]
-    DraftGen --> DraftOut["草稿 Token 及概率\nx_t+1 到 x_t+K\n附带概率 r_1 到 r_K"]
-    DraftOut --> Verification["目标模型\n1 次前向传播\n验证 K+1 个位置\n<大型、昂贵>"]
-    Verification --> TargetProbs["目标概率\nq_1 ... q_K, q_{K+1}\n(K+1) 个词表分布"]
-
-    DraftOut --> AcceptCheck["接受/拒绝 循环\n对 i = 1 到 K:\n  alpha_i = min(1, q_i / r_i)\n  若 u < alpha_i 则接受"]
+    Context --> DraftGen
+    DraftGen --> DraftOut
+    DraftOut --> Verification
+    Verification --> TargetProbs
+    DraftOut --> AcceptCheck
     TargetProbs --> AcceptCheck
+    AcceptCheck --> AllAccepted
+    AllAccepted -->|YES| Bonus
+    AllAccepted -->|NO| Rejection
+    Bonus --> Output
+    Rejection --> OutputRej
+    OutputContext --> DraftGen
 
-    AcceptCheck --> AllAccepted{"全部接受？"}
-    AllAccepted -->|是 0-K| Bonus["从 q_{K+1}\n抽样额外 token"]
-    AllAccepted -->|否| Rejection["位置 j 被绝\n从残差分布抽样：\np_adj = max(0,q-r)/Z"]
-    Bonus --> Output["输出：K+1 个新 token"]
-    Rejection --> OutputRej["输出：j-1 个已接受 +\n1 个替换 token"]
-
-    OutputContext["新上下文\nx_1 ... x_t + 新 token"] --> DraftGen
-
-    style DraftGen fill:#e1f5e1
-    style Verification fill:#ffe1e1
-    style AcceptCheck fill:#fff3cd
+    Context["当前上下文"]
+    DraftGen["草稿模型 K 次"]
+    DraftOut["草稿 Token r1..rK"]
+    Verification["目标模型 1 次"]
+    TargetProbs["目标概率 q1..qKplus1"]
+    AcceptCheck["接受/拒绝 循环"]
+    AllAccepted{"全部接受？"}
+    Bonus["从 q_Kplus1 抽样"]
+    Rejection["位置 j 拒绝，残差抽样"]
+    Output["输出 Kplus1 个 token"]
+    OutputRej["输出 j-1 + 1 拒绝"]
+    OutputContext["新上下文"]
 ```
 
 ## 数学原理
@@ -382,27 +388,11 @@ if __name__ == "__main__":
 
 ```mermaid
 flowchart LR
-    subgraph 草稿策略
-        A["经典投机解码\n独立小型模型\n最高精度"]
-        B["Medusa\n多头机制\n无需独立模型"]
-        C["EAGLE\n基于草稿\n丰富的中间层特征"]
-        D["前瞻解码\nN-gram 缓存\n无需训练"]
-    end
-
-    subgraph 共享验证
-        V["目标模型验证\n接受/拒绝判断\nalpha = min(1, q/r)\n无损保证"]
-    end
-
-    A --> V
-    B --> V
-    C --> V
-    D --> V
-
-    style A fill:#e1f5e1
-    style B fill:#e1f5e1
-    style C fill:#e1f5e1
-    style D fill:#e1f5e1
-    style V fill:#fff3cd
+    A[经典投机解码] --> V
+    B[Medusa] --> V
+    C[EAGLE] --> V
+    D[前瞻解码] --> V
+    V["目标模型验证"]
 ```
 
 | 变体 | 草稿机制 | 接受率 | 是否需要训练 | 分布保证 |
