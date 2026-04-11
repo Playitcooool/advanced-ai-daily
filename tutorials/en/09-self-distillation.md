@@ -6,7 +6,7 @@ category: "Post-Training"
 
 # Day 09: Simple Self-Distillation (SSD) -- Improving Code Generation Without Verifiers or RL
 
-> **Watch the animation**: ![SSD Animation](../../gifs/09-self-distillation.gif)
+> **Watch the animation**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/09-self-distillation.webm" autoplay loop muted playsinline width="800"></video>
 
 ---
 

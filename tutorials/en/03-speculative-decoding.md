@@ -4,12 +4,12 @@ difficulty: "Advanced"
 category: "Inference Acceleration"
 ---
 
-![Algorithm Animation](../../gifs/03-speculative-decoding.gif)
+<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
 
 
 # Day 03: Speculative Decoding -- Lossless Inference Speedup
 
-> **Watch the animation**: ![Speculative Decoding Animation](../../gifs/03-speculative-decoding.gif)
+> **Watch the animation**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
 
 ## Quick Reference
 

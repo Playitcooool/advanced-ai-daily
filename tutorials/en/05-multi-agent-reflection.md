@@ -6,7 +6,7 @@ category: "Multi-Agent Systems"
 
 # Day 05: Multi-Agent Reflection -- Planner-Executor-Verifier, Reflexion, and Debate
 
-> **Watch the animation**: ![Multi-Agent Reflection Animation](../../gifs/05-multi-agent-reflection.gif)
+> **Watch the animation**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/05-multi-agent-reflection.webm" autoplay loop muted playsinline width="800"></video>
 
 ---
 
@@ -16,7 +16,7 @@ Multi-agent reflection distributes cognitive labor across specialized agents -- 
 
 ---
 
-![Algorithm Animation](../../gifs/05-multi-agent-reflection.gif)
+<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/05-multi-agent-reflection.webm" autoplay loop muted playsinline width="800"></video>
 
 
 ## Why This Matters

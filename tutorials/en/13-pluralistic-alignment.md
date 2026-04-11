@@ -18,7 +18,7 @@ prerequisites:
   - "Familiarity with RLHF and preference learning"
 ---
 
-![Pluralistic Alignment Animation](../../gifs/13-pluralistic-alignment.gif)
+<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/13-pluralistic-alignment.webm" autoplay loop muted playsinline width="800"></video>
 
 
 # Day 13: Pluralistic Alignment -- Capturing Diverse Human Preferences

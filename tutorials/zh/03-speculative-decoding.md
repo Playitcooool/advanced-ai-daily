@@ -4,12 +4,12 @@ difficulty: "高级"
 category: "推理加速"
 ---
 
-![算法动画](../../gifs/03-speculative-decoding.gif)
+<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
 
 
 # 第 03 天：投机解码（Speculative Decoding）—— 无损推理加速
 
-> **观看动画演示**：![投机解码动画](../../gifs/03-speculative-decoding.gif)
+> **观看动画演示**：<video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/03-speculative-decoding.webm" autoplay loop muted playsinline width="800"></video>
 
 ## 快速参考
 

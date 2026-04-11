@@ -6,7 +6,7 @@ category: "Agent / RL"
 
 # Day 15: HDPO — Meta-Cognitive Tool Use in Agentic Models
 
-> **Watch the animation**: ![HDPO Animation](../../gifs/15-hdpo.gif)
+> **Watch the animation**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/15-hdpo.webm" autoplay loop muted playsinline width="800"></video>
 
 ---
 

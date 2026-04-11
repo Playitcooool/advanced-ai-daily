@@ -7,7 +7,7 @@ paper: "Early Stopping for Large Reasoning Models via Confidence Dynamics"
 
 # Day 12: 基于置信度动态的大推理模型提前停止
 
-> **观看动画**: ![Early Stopping Animation](../../gifs/12-early-stopping.gif)
+> **观看动画**: <video src="https://raw.githubusercontent.com/Playitcooool/advanced-ai-daily/main/videos/12-early-stopping.webm" autoplay loop muted playsinline width="800"></video>
 
 ---
 
