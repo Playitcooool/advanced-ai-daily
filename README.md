@@ -12,7 +12,6 @@
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
 | 01 | [GRPO — Group Relative Policy Optimization](tutorials/en/rl-training/01-grpo.md) | ~15 min | Mermaid + GIF |
-| 15 | [HDPO — Meta-Cognitive Tool Use](tutorials/en/rl-training/15-hdpo.md) | ~15 min | Mermaid + GIF |
 
 ### Mixture of Experts
 | # | Topic | Time | Visual |
@@ -37,6 +36,7 @@
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
 | 05 | [Multi-Agent Reflection](tutorials/en/agent/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
+| 15 | [HDPO — Meta-Cognitive Tool Use](tutorials/en/agent/15-hdpo.md) | ~15 min | Mermaid + GIF |
 
 ### Memory & KV Cache
 | # | Topic | Time | Visual |
@@ -76,7 +76,6 @@
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
 | 01 | [GRPO — 组相对策略优化](tutorials/zh/rl-training/01-grpo.md) | ~15 min | Mermaid + GIF |
-| 15 | [HDPO — 元认知工具使用](tutorials/zh/rl-training/15-hdpo.md) | ~15 min | Mermaid + GIF |
 
 ### 混合专家系统 (Mixture of Experts)
 | # | Topic | Time | Visual |
@@ -101,6 +100,7 @@
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
 | 05 | [多智能体反思系统](tutorials/zh/agent/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
+| 15 | [HDPO — 元认知工具使用](tutorials/zh/agent/15-hdpo.md) | ~15 min | Mermaid + GIF |
 
 ### 记忆与缓存 (Memory & KV Cache)
 | # | Topic | Time | Visual |
@@ -155,11 +155,11 @@ Every tutorial (EN + ZH) includes:
 advanced-ai-daily/
 ├── tutorials/
 │   ├── en/
-│   │   ├── rl-training/     # GRPO, HDPO
+│   │   ├── rl-training/     # GRPO
 │   │   ├── moe/            # Mixture of Experts, Routing Distraction
 │   │   ├── inference/       # Speculative Decoding, Test-Time Compute, Early Stopping
 │   │   ├── attention/       # RBF Attention, Gradient Boosted Attention
-│   │   ├── agent/           # Multi-Agent Reflection
+│   │   ├── agent/           # Multi-Agent Reflection, HDPO
 │   │   ├── memory/          # Memory & KV Cache
 │   │   ├── distillation/    # Self-Distillation
 │   │   ├── routing/         # Sample Routing
