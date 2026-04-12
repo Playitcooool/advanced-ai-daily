@@ -173,5 +173,12 @@
     "year": 2022,
     "category": "Architecture",
     "verified": true
+  },
+  "2604.08523": {
+    "title": "ClawBench: Can AI Agents Complete Everyday Online Tasks?",
+    "authors": "Zhang et al.",
+    "year": 2026,
+    "category": "Agent",
+    "verified": true
   }
 }
