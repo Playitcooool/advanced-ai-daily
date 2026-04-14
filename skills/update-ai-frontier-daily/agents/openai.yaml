@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update AI Frontier Daily"
+  short_description: "Update advanced-ai-daily from today's frontier signals"
+  default_prompt: "Use $update-ai-frontier-daily to update today's AI frontier tutorial in /Volumes/Samsung/Projects/advanced-ai-daily."
