@@ -64,6 +64,11 @@
 |:--|:------|:----:|:------:|
 | 14 | [SUPERNOVA — Natural Instruction RL](tutorials/en/architecture/14-supernova.md) | ~15 min | Mermaid + GIF |
 
+### Multimodal Systems
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 18 | [Qianfan-OCR — Layout-as-Thought for Document Parsing](tutorials/en/multimodal/18-qianfan-ocr.md) | ~15 min | Mermaid + GIF |
+
 ### Quantization
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
@@ -129,6 +134,11 @@
 |:--|:------|:----:|:------:|
 | 14 | [SUPERNOVA — 自然指令强化学习](tutorials/zh/architecture/14-supernova.md) | ~15 min | Mermaid + GIF |
 
+### 多模态系统 (Multimodal Systems)
+| # | Topic | Time | Visual |
+|:--|:------|:----:|:------:|
+| 18 | [Qianfan-OCR — 版面先思考，再统一解析](tutorials/zh/multimodal/18-qianfan-ocr.md) | ~15 min | Mermaid + GIF |
+
 ### 量化 (Quantization)
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
@@ -167,6 +177,7 @@ advanced-ai-daily/
 │   │   ├── routing/         # Sample Routing
 │   │   ├── alignment/       # Pluralistic Alignment
 │   │   ├── architecture/   # SUPERNOVA
+│   │   ├── multimodal/      # Qianfan-OCR
 │   │   └── quantization/    # Quantization
 │   └── zh/                  # (mirrors en/ structure)
 ├── gifs/                    # Animated GIFs
@@ -200,4 +211,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_34 tutorial files · 17 topics × 2 languages · categorized format_
+_36 tutorial files · 18 topics × 2 languages · categorized format_
