@@ -68,9 +68,19 @@ If network access is blocked by the sandbox, request escalation and continue.
 Before writing tutorial markdown, generate the tutorial visual asset.
 
 - Prefer a GIF under `gifs/` for concepts that benefit from animation.
+- Do **not** use the GIF as a full pipeline overview when Mermaid will already cover the system structure.
+- Treat Mermaid and GIF as separate jobs:
+  - Mermaid explains the full architecture or end-to-end flow.
+  - GIF explains one key dynamic process that is hardest to understand from static text alone.
+- Pick exactly one process for the GIF. Good targets include routing, cache growth/reuse, confidence crossing a stop threshold, iterative refinement, token acceptance/rejection, or adaptive compute allocation.
+- The GIF should answer one question only: "what changes over time here?"
+- Do not try to show input, architecture, advantages, and final takeaway in the same animation.
 - Use English-only labels inside figures to avoid missing glyphs.
 - Verify the asset exists on disk before referencing it in markdown.
 - Reuse existing animation patterns from the repo and from [references/rendering-pitfalls.md](references/rendering-pitfalls.md).
+- Do not repeat a recent animation's core motion logic. Before finalizing a storyboard, inspect recent GIFs and reject the new one if it is effectively another "boxes fade in, arrows light up, result appears" animation.
+- For each new GIF, choose a dynamic angle that is specific to this tutorial's mechanism rather than a generic template. The motion grammar should be tied to a distinct variable such as probability mass, token path, confidence, budget, residual error, or loop count.
+- Prefer fewer elements with clearer state change over more labels with weaker motion. If removing 70% of the objects makes the idea clearer, redesign the storyboard around the smaller idea.
 - Treat animation clarity as a hard requirement. If labels overlap, arrows cross text, or too many regions compete in the same frame, redesign the storyboard instead of only shrinking the font.
 
 The markdown should point to an asset that already exists.
