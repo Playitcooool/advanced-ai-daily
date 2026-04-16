@@ -25,6 +25,7 @@
 | 03 | [Speculative Decoding](tutorials/en/inference/03-speculative-decoding.md) | ~15 min | Mermaid + GIF |
 | 04 | [Test-Time Compute Scaling](tutorials/en/inference/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
 | 12 | [Early Stopping via Confidence Dynamics](tutorials/en/inference/12-early-stopping.md) | ~15 min | Mermaid + GIF |
+| 20 | [Adaptive Reasoning Budgets - Stopping LLMs from Overthinking](tutorials/en/inference/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
 
 ### Attention Mechanisms
 | # | Topic | Time | Visual |
@@ -96,6 +97,7 @@
 | 03 | [投机解码](tutorials/zh/inference/03-speculative-decoding.md) | ~15 min | Mermaid + GIF |
 | 04 | [推理时计算扩展](tutorials/zh/inference/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
 | 12 | [基于置信度动态的提前停止](tutorials/zh/inference/12-early-stopping.md) | ~15 min | Mermaid + GIF |
+| 20 | [自适应推理预算 - 让 LLM 别再过度思考](tutorials/zh/inference/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
 
 ### 注意力机制 (Attention Mechanisms)
 | # | Topic | Time | Visual |
@@ -213,4 +215,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_38 tutorial files · 19 topics × 2 languages · categorized format_
+_40 tutorial files · 20 topics × 2 languages · categorized format_
