@@ -39,6 +39,7 @@
 | 05 | [Multi-Agent Reflection](tutorials/en/agent/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
 | 15 | [HDPO — Meta-Cognitive Tool Use](tutorials/en/agent/15-hdpo.md) | ~15 min | Mermaid + GIF |
 | 17 | [ClawBench — Everyday Online Tasks for Agents](tutorials/en/agent/17-clawbench.md) | ~15 min | Mermaid + GIF |
+| 21 | [Parallel Tool Calling — Stop Making Agents Wait on Themselves](tutorials/en/agent/21-parallel-tool-calling.md) | ~15 min | Mermaid + GIF |
 
 ### Memory & KV Cache
 | # | Topic | Time | Visual |
@@ -111,6 +112,7 @@
 | 05 | [多智能体反思系统](tutorials/zh/agent/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
 | 15 | [HDPO — 元认知工具使用](tutorials/zh/agent/15-hdpo.md) | ~15 min | Mermaid + GIF |
 | 17 | [ClawBench — 日常在线任务智能体基准](tutorials/zh/agent/17-clawbench.md) | ~15 min | Mermaid + GIF |
+| 21 | [并行工具调用 — 别让智能体自己等自己](tutorials/zh/agent/21-parallel-tool-calling.md) | ~15 min | Mermaid + GIF |
 
 ### 记忆与缓存 (Memory & KV Cache)
 | # | Topic | Time | Visual |
@@ -215,4 +217,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_40 tutorial files · 20 topics × 2 languages · categorized format_
+_42 tutorial files · 21 topics × 2 languages · categorized format_
