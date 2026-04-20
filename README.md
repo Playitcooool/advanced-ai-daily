@@ -26,6 +26,7 @@
 | 04 | [Test-Time Compute Scaling](tutorials/en/inference/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
 | 12 | [Early Stopping via Confidence Dynamics](tutorials/en/inference/12-early-stopping.md) | ~15 min | Mermaid + GIF |
 | 20 | [Adaptive Reasoning Budgets - Stopping LLMs from Overthinking](tutorials/en/inference/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
+| 22 | [Parallel Drafting — Breaking the Draft Bottleneck in Speculative Decoding](tutorials/en/inference/22-parallel-drafting.md) | ~15 min | Mermaid + GIF |
 
 ### Attention Mechanisms
 | # | Topic | Time | Visual |
@@ -99,6 +100,7 @@
 | 04 | [推理时计算扩展](tutorials/zh/inference/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
 | 12 | [基于置信度动态的提前停止](tutorials/zh/inference/12-early-stopping.md) | ~15 min | Mermaid + GIF |
 | 20 | [自适应推理预算 - 让 LLM 别再过度思考](tutorials/zh/inference/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
+| 22 | [并行草稿生成 — 打破投机解码中的草稿瓶颈](tutorials/zh/inference/22-parallel-drafting.md) | ~15 min | Mermaid + GIF |
 
 ### 注意力机制 (Attention Mechanisms)
 | # | Topic | Time | Visual |
@@ -217,4 +219,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_42 tutorial files · 21 topics × 2 languages · categorized format_
+_44 tutorial files · 22 topics × 2 languages · categorized format_
