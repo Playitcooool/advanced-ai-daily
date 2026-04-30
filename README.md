@@ -67,6 +67,7 @@
 |:--|:------|:----:|:------:|
 | 14 | [SUPERNOVA — Natural Instruction RL](tutorials/en/architecture/14-supernova.md) | ~15 min | Mermaid + GIF |
 | 19 | [Looped Language Models — Reusing Depth for Latent Reasoning](tutorials/en/architecture/19-looped-language-models.md) | ~15 min | Mermaid + GIF |
+| 23 | [Select to Think — SLM Reranking via Local Sufficiency](tutorials/en/architecture/23-select-to-think.md) | ~15 min | Mermaid + GIF |
 
 ### Multimodal Systems
 | # | Topic | Time | Visual |
@@ -141,6 +142,7 @@
 |:--|:------|:----:|:------:|
 | 14 | [SUPERNOVA — 自然指令强化学习](tutorials/zh/architecture/14-supernova.md) | ~15 min | Mermaid + GIF |
 | 19 | [循环语言模型 — 用重复深度换取潜在推理](tutorials/zh/architecture/19-looped-language-models.md) | ~15 min | Mermaid + GIF |
+| 23 | [Select to Think — SLM 本地充足性重排序](tutorials/zh/architecture/23-select-to-think.md) | ~15 min | Mermaid + GIF |
 
 ### 多模态系统 (Multimodal Systems)
 | # | Topic | Time | Visual |
@@ -219,4 +221,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_44 tutorial files · 22 topics × 2 languages · categorized format_
+_44 tutorial files · 23 topics × 2 languages · categorized format_
