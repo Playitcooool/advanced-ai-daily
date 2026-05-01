@@ -52,8 +52,12 @@ Daily update (Day N → Day N+1):
 ## Key Paths
 
 ```
-tutorials/en/<category>/
-tutorials/zh/<category>/
+tutorials/en/work/    # inference, architecture, memory, routing, attention
+tutorials/en/act/    # agents, tools, multimodal
+tutorials/en/learn/  # rl-training, distillation, alignment
+tutorials/zh/work/
+tutorials/zh/act/
+tutorials/zh/learn/
 gifs/
 references/keyword-database.json
 README.md
