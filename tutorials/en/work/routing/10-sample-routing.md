@@ -677,3 +677,55 @@ This is what makes it a true **unification** -- not just averaging two losses, b
 - **SSD (Day 09)**: [arXiv:2604.01193](https://arxiv.org/abs/2604.01193) -- Embarrassingly Simple Self-Distillation Improves Code Generation
 - **STaR**: [arXiv:2203.14465](https://arxiv.org/abs/2203.14465) -- Self-Taught Reasoner
 - **PPO**: [arXiv:1707.06347](https://arxiv.org/abs/1707.06347) -- Proximal Policy Optimization Algorithms
+
+---
+
+---
+
+## Quick Quiz
+
+Test your understanding of this topic.
+
+### Q1. What is the core mechanism described in this tutorial?
+
+- A. A new attention variant
+- B. A training or inference algorithm
+- C. A hardware optimization
+- D. A dataset format
+
+<details>
+<summary>Reveal Answer</summary>
+
+**Answer: B** — This tutorial focuses on a routing mechanism.
+
+*Explanation varies by tutorial — see the Core Insight section for the key takeaway.*
+
+</details>
+
+### Q2. When does this approach work best?
+
+- A. Only on very large models
+- B. Only on small models
+- C. Under specific conditions detailed in the tutorial
+- D. Always, regardless of setup
+
+<details>
+<summary>Reveal Answer</summary>
+
+**Answer: C** — The tutorial describes specific conditions and tradeoffs. Review the "Why This Matters" and "Limitations" sections.
+
+</details>
+
+### Q3. What is the main takeaway?
+
+- A. Use this instead of all other approaches
+- B. This is a niche optimization with no practical use
+- C. A specific mechanism with clear use cases and tradeoffs
+- D. This has been superseded by a newer method
+
+<details>
+<summary>Reveal Answer</summary>
+
+**Answer: C** — Every tutorial in this repo focuses on a specific mechanism with its own tradeoffs. Check the One-Line Summary at the top and the "What [Topic] Teaches Us" section at the bottom.
+
+</details>

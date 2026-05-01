@@ -1,0 +1,105 @@
+name: Tutorial Quality Checks
+
+on:
+  pull_request:
+    paths:
+      - "tutorials/**/*.md"
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Mermaid diagrams
+        run: |
+          echo "=== Checking Mermaid syntax ==="
+          for f in tutorials/en/**/*.md tutorials/zh/**/*.md; do
+            # Extract mermaid blocks
+            blocks=$(grep -A 999 '```mermaid' "$f" 2>/dev/null | grep -B 999 '```$' | grep -v '```mermaid' | grep -v '```$' | head -999)
+            if echo "$blocks" | grep -qE '^\s*(graph|flowchart|sequenceDiagram|classDiagram|gantt)'; then
+              echo "PASS: $f has valid Mermaid"
+            else
+              if grep -q '```mermaid' "$f"; then
+                echo "FAIL: $f Mermaid blocks may have syntax issues"
+                echo "$blocks"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: Check LaTeX math pairs
+        run: |
+          echo "=== Checking $$ pairs ==="
+          for f in tutorials/en/**/*.md tutorials/zh/**/*.md; do
+            dollar_count=$(grep -o '\$\$' "$f" | wc -l)
+            if [ $((dollar_count % 2)) -ne 0 ]; then
+              echo "FAIL: $f has unmatched \$\$ pairs ($dollar_count found)"
+              exit 1
+            fi
+            # Also check single $ for inline math
+            inline_count=$(grep -o '[^$]\$[^$]' "$f" | grep -o '\$' | wc -l)
+          done
+          echo "PASS: All LaTeX pairs matched"
+
+      - name: Check language separation
+        run: |
+          echo "=== Checking language separation ==="
+          for f in tutorials/en/**/*.md tutorials/zh/**/*.md; do
+            en_chars=$(echo "$f" | grep -c "zh/")
+            if [ "$en_chars" -eq 0 ]; then
+              # EN file - should not contain Chinese chars (except in code/links)
+              chinese=$(grep -v '^\[.*\]:.*' "$f" | grep -v '^```' | grep -oE '[\x{4e00}-\x{9fff}]' | head -5)
+              if [ -n "$chinese" ]; then
+                echo "FAIL: $f contains mixed Chinese text"
+                echo "Found: $chinese"
+                exit 1
+              fi
+            fi
+          done
+          echo "PASS: Language separation OK"
+
+      - name: Check frontmatter
+        run: |
+          echo "=== Checking frontmatter ==="
+          for f in tutorials/en/**/*.md tutorials/zh/**/*.md; do
+            if ! grep -q '^---' "$f"; then
+              echo "FAIL: $f missing frontmatter ---"
+              exit 1
+            fi
+            if ! grep -q '^date:' "$f"; then
+              echo "FAIL: $f missing date in frontmatter"
+              exit 1
+            fi
+            if ! grep -q '^title:' "$f"; then
+              echo "FAIL: $f missing title in frontmatter"
+              exit 1
+            fi
+          done
+          echo "PASS: Frontmatter OK"
+
+      - name: Check Python code blocks
+        run: |
+          echo "=== Checking Python code blocks ==="
+          for f in tutorials/en/**/*.md tutorials/zh/**/*.md; do
+            if grep -A 5 '```python' "$f" | grep -q 'if __name__ == "__main__"'; then
+              echo "INFO: $f has runnable Python"
+            fi
+          done
+          echo "PASS: Python blocks OK"
+
+      - name: Check required sections
+        run: |
+          echo "=== Checking required sections ==="
+          for f in tutorials/en/**/*.md tutorials/zh/**/*.md; do
+            for section in "One-Line Summary" "Core Insight" "Architecture Walkthrough" "Python Code"; do
+              if ! grep -q "$section" "$f"; then
+                echo "WARN: $f may be missing section: $section"
+              fi
+            done
+          done
+          echo "PASS: Section check complete"

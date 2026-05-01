@@ -6,46 +6,61 @@
 
 ---
 
+## 🚀 Start Here — Pick Your Track
+
+Not sure where to begin? Choose a track based on your goal:
+
+**New to the repo?** Start with any foundational topic below — all are self-contained.
+
+| Track | Start Here | Goes Well With |
+|:------|:-----------|:---------------|
+| RL & Training | [Day 01: GRPO](/tutorials/en/learn/rl-training/01-grpo.md) | 09, 10, 13, 24 |
+| Inference Speed | [Day 03: Speculative Decoding](/tutorials/en/work/inference/03-speculative-decoding.md) | 12, 20, 22 |
+| Agent Systems | [Day 05: Multi-Agent Reflection](/tutorials/en/act/agent/05-multi-agent-reflection.md) | 15, 17, 21 |
+| Model Architecture | [Day 02: MoE](/tutorials/en/work/moe/02-mixture-of-experts.md) | 16, 19 |
+
+---
+
 ## 🇬🇧 English Tutorials
 
 ### Work — How Models Process
 *Inference, architecture, memory, routing*
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
-| 02 | [MoE — Mixture of Experts](tutorials/en/work/02-mixture-of-experts.md) | ~20 min | Mermaid + GIF |
-| 03 | [Speculative Decoding](tutorials/en/work/03-speculative-decoding.md) | ~15 min | Mermaid + GIF |
-| 04 | [Test-Time Compute Scaling](tutorials/en/work/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
-| 06 | [Quantization — TurboQuant & 1-bit LLMs](tutorials/en/work/06-quantization.md) | ~15 min | Mermaid + PNG |
-| 07 | [RBF Attention](tutorials/en/work/07-rbf-attention.md) | ~15 min | Mermaid + PNG |
-| 08 | [Memory & KV Cache](tutorials/en/work/08-memory-kv-cache.md) | ~20 min | Mermaid + PNG |
-| 10 | [SRPO — Unifying GRPO & Self-Distillation](tutorials/en/work/10-sample-routing.md) | ~15 min | Mermaid + GIF |
-| 11 | [Gradient Boosted Attention](tutorials/en/work/11-gradient-boosted-attention.md) | ~15 min | Mermaid + GIF |
-| 12 | [Early Stopping via Confidence Dynamics](tutorials/en/work/12-early-stopping.md) | ~15 min | Mermaid + GIF |
-| 14 | [SUPERNOVA — Natural Instruction RL](tutorials/en/work/14-supernova.md) | ~15 min | Mermaid + GIF |
-| 16 | [Routing Distraction — "Seeing but Not Thinking"](tutorials/en/work/16-routing-distraction.md) | ~15 min | Mermaid + GIF |
-| 19 | [Looped Language Models — Reusing Depth for Latent Reasoning](tutorials/en/work/19-looped-language-models.md) | ~15 min | Mermaid + GIF |
-| 20 | [Adaptive Reasoning Budgets — Stopping LLMs from Overthinking](tutorials/en/work/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
-| 22 | [Parallel Drafting — Breaking the Draft Bottleneck in Speculative Decoding](tutorials/en/work/22-parallel-drafting.md) | ~15 min | Mermaid + GIF |
-| 23 | [Select to Think — SLM Reranking via Local Sufficiency](tutorials/en/work/23-select-to-think.md) | ~15 min | Mermaid + GIF |
+| 02 | [MoE — Mixture of Experts](tutorials/en/work/moe/02-mixture-of-experts.md) | ~20 min | Mermaid + GIF |
+| 03 | [Speculative Decoding](tutorials/en/work/inference/03-speculative-decoding.md) | ~15 min | Mermaid + GIF |
+| 04 | [Test-Time Compute Scaling](tutorials/en/work/inference/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
+| 06 | [Quantization — TurboQuant & 1-bit LLMs](tutorials/en/work/quantization/06-quantization.md) | ~15 min | Mermaid + PNG |
+| 07 | [RBF Attention](tutorials/en/work/attention/07-rbf-attention.md) | ~15 min | Mermaid + PNG |
+| 08 | [Memory & KV Cache](tutorials/en/work/memory/08-memory-kv-cache.md) | ~20 min | Mermaid + PNG |
+| 10 | [SRPO — Unifying GRPO & Self-Distillation](tutorials/en/work/routing/10-sample-routing.md) | ~15 min | Mermaid + GIF |
+| 11 | [Gradient Boosted Attention](tutorials/en/work/attention/11-gradient-boosted-attention.md) | ~15 min | Mermaid + GIF |
+| 12 | [Early Stopping via Confidence Dynamics](tutorials/en/work/inference/12-early-stopping.md) | ~15 min | Mermaid + GIF |
+| 14 | [SUPERNOVA — Natural Instruction RL](tutorials/en/work/architecture/14-supernova.md) | ~15 min | Mermaid + GIF |
+| 16 | [Routing Distraction — "Seeing but Not Thinking"](tutorials/en/work/moe/16-routing-distraction.md) | ~15 min | Mermaid + GIF |
+| 19 | [Looped Language Models — Reusing Depth for Latent Reasoning](tutorials/en/work/architecture/19-looped-language-models.md) | ~15 min | Mermaid + GIF |
+| 20 | [Adaptive Reasoning Budgets — Stopping LLMs from Overthinking](tutorials/en/work/inference/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
+| 22 | [Parallel Drafting — Breaking the Draft Bottleneck in Speculative Decoding](tutorials/en/work/inference/22-parallel-drafting.md) | ~15 min | Mermaid + GIF |
+| 23 | [Select to Think — SLM Reranking via Local Sufficiency](tutorials/en/work/architecture/23-select-to-think.md) | ~15 min | Mermaid + GIF |
 
 ### Act — How Models Interact
 *Agents, tools, multimodal*
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
-| 05 | [Multi-Agent Reflection](tutorials/en/act/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
-| 15 | [HDPO — Meta-Cognitive Tool Use](tutorials/en/act/15-hdpo.md) | ~15 min | Mermaid + GIF |
-| 17 | [ClawBench — Everyday Online Tasks for Agents](tutorials/en/act/17-clawbench.md) | ~15 min | Mermaid + GIF |
-| 18 | [Qianfan-OCR — Layout-as-Thought for Document Parsing](tutorials/en/act/18-qianfan-ocr.md) | ~15 min | Mermaid + GIF |
-| 21 | [Parallel Tool Calling — Stop Making Agents Wait on Themselves](tutorials/en/act/21-parallel-tool-calling.md) | ~15 min | Mermaid + GIF |
+| 05 | [Multi-Agent Reflection](tutorials/en/act/agent/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
+| 15 | [HDPO — Meta-Cognitive Tool Use](tutorials/en/act/agent/15-hdpo.md) | ~15 min | Mermaid + GIF |
+| 17 | [ClawBench — Everyday Online Tasks for Agents](tutorials/en/act/agent/17-clawbench.md) | ~15 min | Mermaid + GIF |
+| 18 | [Qianfan-OCR — Layout-as-Thought for Document Parsing](tutorials/en/act/multimodal/18-qianfan-ocr.md) | ~15 min | Mermaid + GIF |
+| 21 | [Parallel Tool Calling — Stop Making Agents Wait on Themselves](tutorials/en/act/agent/21-parallel-tool-calling.md) | ~15 min | Mermaid + GIF |
 
 ### Learn — How Models Improve
 *RL training, distillation, alignment*
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
-| 01 | [GRPO — Group Relative Policy Optimization](tutorials/en/learn/01-grpo.md) | ~15 min | Mermaid + GIF |
-| 09 | [Simple Self-Distillation (SSD)](tutorials/en/learn/09-self-distillation.md) | ~20 min | Mermaid + GIF |
-| 13 | [Pluralistic Alignment](tutorials/en/learn/13-pluralistic-alignment.md) | ~15 min | Mermaid + GIF |
-| 24 | [Exploration Hacking — When LLMs Learn to Resist RL Training](tutorials/en/learn/24-exploration-hacking.md) | ~15 min | Mermaid + GIF |
+| 01 | [GRPO — Group Relative Policy Optimization](tutorials/en/learn/rl-training/01-grpo.md) | ~15 min | Mermaid + GIF |
+| 09 | [Simple Self-Distillation (SSD)](tutorials/en/learn/distillation/09-self-distillation.md) | ~20 min | Mermaid + GIF |
+| 13 | [Pluralistic Alignment](tutorials/en/learn/alignment/13-pluralistic-alignment.md) | ~15 min | Mermaid + GIF |
+| 24 | [Exploration Hacking — When LLMs Learn to Resist RL Training](tutorials/en/learn/rl-training/24-exploration-hacking.md) | ~15 min | Mermaid + GIF |
 
 ---
 
@@ -55,40 +70,40 @@
 *推理优化、架构、记忆、路由*
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
-| 02 | [MoE — 混合专家架构](tutorials/zh/work/02-mixture-of-experts.md) | ~20 min | Mermaid + GIF |
-| 03 | [投机解码](tutorials/zh/work/03-speculative-decoding.md) | ~15 min | Mermaid + GIF |
-| 04 | [推理时计算扩展](tutorials/zh/work/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
-| 06 | [模型量化 — TurboQuant 与 1-bit 大模型](tutorials/zh/work/06-quantization.md) | ~15 min | Mermaid + PNG |
-| 07 | [RBF 注意力 — 超越点积](tutorials/zh/work/07-rbf-attention.md) | ~15 min | Mermaid + PNG |
-| 08 | [记忆机制与 KV Cache 优化](tutorials/zh/work/08-memory-kv-cache.md) | ~20 min | Mermaid + PNG |
-| 10 | [SRPO — 统一 GRPO 与自蒸馏](tutorials/zh/work/10-sample-routing.md) | ~15 min | Mermaid + GIF |
-| 11 | [梯度提升注意力](tutorials/zh/work/11-gradient-boosted-attention.md) | ~15 min | Mermaid + GIF |
-| 12 | [基于置信度动态的提前停止](tutorials/zh/work/12-early-stopping.md) | ~15 min | Mermaid + GIF |
-| 14 | [SUPERNOVA — 自然指令强化学习](tutorials/zh/work/14-supernova.md) | ~15 min | Mermaid + GIF |
-| 16 | [路由分心 — "看得见但不会思考"](tutorials/zh/work/16-routing-distraction.md) | ~15 min | Mermaid + GIF |
-| 19 | [循环语言模型 — 用重复深度换取潜在推理](tutorials/zh/work/19-looped-language-models.md) | ~15 min | Mermaid + GIF |
-| 20 | [自适应推理预算 - 让 LLM 别再过度思考](tutorials/zh/work/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
-| 22 | [并行草稿生成 — 打破投机解码中的草稿瓶颈](tutorials/zh/work/22-parallel-drafting.md) | ~15 min | Mermaid + GIF |
-| 23 | [Select to Think — SLM 本地充足性重排序](tutorials/zh/work/23-select-to-think.md) | ~15 min | Mermaid + GIF |
+| 02 | [MoE — 混合专家架构](tutorials/zh/work/moe/02-mixture-of-experts.md) | ~20 min | Mermaid + GIF |
+| 03 | [投机解码](tutorials/zh/work/inference/03-speculative-decoding.md) | ~15 min | Mermaid + GIF |
+| 04 | [推理时计算扩展](tutorials/zh/work/inference/04-test-time-compute.md) | ~20 min | Mermaid + GIF |
+| 06 | [模型量化 — TurboQuant 与 1-bit 大模型](tutorials/zh/work/quantization/06-quantization.md) | ~15 min | Mermaid + PNG |
+| 07 | [RBF 注意力 — 超越点积](tutorials/zh/work/attention/07-rbf-attention.md) | ~15 min | Mermaid + PNG |
+| 08 | [记忆机制与 KV Cache 优化](tutorials/zh/work/memory/08-memory-kv-cache.md) | ~20 min | Mermaid + PNG |
+| 10 | [SRPO — 统一 GRPO 与自蒸馏](tutorials/zh/work/routing/10-sample-routing.md) | ~15 min | Mermaid + GIF |
+| 11 | [梯度提升注意力](tutorials/zh/work/attention/11-gradient-boosted-attention.md) | ~15 min | Mermaid + GIF |
+| 12 | [基于置信度动态的提前停止](tutorials/zh/work/inference/12-early-stopping.md) | ~15 min | Mermaid + GIF |
+| 14 | [SUPERNOVA — 自然指令强化学习](tutorials/zh/work/architecture/14-supernova.md) | ~15 min | Mermaid + GIF |
+| 16 | [路由分心 — "看得见但不会思考"](tutorials/zh/work/moe/16-routing-distraction.md) | ~15 min | Mermaid + GIF |
+| 19 | [循环语言模型 — 用重复深度换取潜在推理](tutorials/zh/work/architecture/19-looped-language-models.md) | ~15 min | Mermaid + GIF |
+| 20 | [自适应推理预算 - 让 LLM 别再过度思考](tutorials/zh/work/inference/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
+| 22 | [并行草稿生成 — 打破投机解码中的草稿瓶颈](tutorials/zh/work/inference/22-parallel-drafting.md) | ~15 min | Mermaid + GIF |
+| 23 | [Select to Think — SLM 本地充足性重排序](tutorials/zh/work/architecture/23-select-to-think.md) | ~15 min | Mermaid + GIF |
 
 ### Act — 模型怎么交互
 *智能体、工具、多模态*
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
-| 05 | [多智能体反思系统](tutorials/zh/act/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
-| 15 | [HDPO — 元认知工具使用](tutorials/zh/act/15-hdpo.md) | ~15 min | Mermaid + GIF |
-| 17 | [ClawBench — 日常在线任务智能体基准](tutorials/zh/act/17-clawbench.md) | ~15 min | Mermaid + GIF |
-| 18 | [Qianfan-OCR — 版面先思考，再统一解析](tutorials/zh/act/18-qianfan-ocr.md) | ~15 min | Mermaid + GIF |
-| 21 | [并行工具调用 — 别让智能体自己等自己](tutorials/zh/act/21-parallel-tool-calling.md) | ~15 min | Mermaid + GIF |
+| 05 | [多智能体反思系统](tutorials/zh/act/agent/05-multi-agent-reflection.md) | ~20 min | Mermaid + GIF |
+| 15 | [HDPO — 元认知工具使用](tutorials/zh/act/agent/15-hdpo.md) | ~15 min | Mermaid + GIF |
+| 17 | [ClawBench — 日常在线任务智能体基准](tutorials/zh/act/agent/17-clawbench.md) | ~15 min | Mermaid + GIF |
+| 18 | [Qianfan-OCR — 版面先思考，再统一解析](tutorials/zh/act/multimodal/18-qianfan-ocr.md) | ~15 min | Mermaid + GIF |
+| 21 | [并行工具调用 — 别让智能体自己等自己](tutorials/zh/act/agent/21-parallel-tool-calling.md) | ~15 min | Mermaid + GIF |
 
 ### Learn — 模型怎么提升
 *RL 训练、蒸馏、对齐*
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
-| 01 | [GRPO — 组相对策略优化](tutorials/zh/learn/01-grpo.md) | ~15 min | Mermaid + GIF |
-| 09 | [简单自蒸馏 (SSD)](tutorials/zh/learn/09-self-distillation.md) | ~20 min | Mermaid + GIF |
-| 13 | [多元对齐：捕捉多样化人类偏好](tutorials/zh/learn/13-pluralistic-alignment.md) | ~15 min | Mermaid + GIF |
-| 24 | [Exploration Hacking — 当 LLM 学会抵抗 RL 训练](tutorials/zh/learn/24-exploration-hacking.md) | ~15 min | Mermaid + GIF |
+| 01 | [GRPO — 组相对策略优化](tutorials/zh/learn/rl-training/01-grpo.md) | ~15 min | Mermaid + GIF |
+| 09 | [简单自蒸馏 (SSD)](tutorials/zh/learn/distillation/09-self-distillation.md) | ~20 min | Mermaid + GIF |
+| 13 | [多元对齐：捕捉多样化人类偏好](tutorials/zh/learn/alignment/13-pluralistic-alignment.md) | ~15 min | Mermaid + GIF |
+| 24 | [Exploration Hacking — 当 LLM 学会抵抗 RL 训练](tutorials/zh/learn/rl-training/24-exploration-hacking.md) | ~15 min | Mermaid + GIF |
 
 ---
 

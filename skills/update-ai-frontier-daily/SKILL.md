@@ -68,6 +68,7 @@ If network access is blocked by the sandbox, request escalation and continue.
 Before writing tutorial markdown, generate the tutorial visual asset.
 
 - Prefer a GIF under `gifs/` for concepts that benefit from animation.
+- Generate OG image: `.venv/bin/python scripts/generate_og_images.py --day NN`
 - Do **not** use the GIF as a full pipeline overview when Mermaid will already cover the system structure.
 - Treat Mermaid and GIF as separate jobs:
   - Mermaid explains the full architecture or end-to-end flow.
@@ -89,8 +90,16 @@ The markdown should point to an asset that already exists.
 
 Create both language versions:
 
-- `tutorials/en/<category>/NN-slug.md`
-- `tutorials/zh/<category>/NN-slug.md`
+- `tutorials/en/work/<subcategory>/NN-slug.md`
+- `tutorials/zh/work/<subcategory>/NN-slug.md`
+
+Pick the correct bucket from the 3-bucket structure:
+
+| Bucket | Subcategories |
+|--------|---------------|
+| **work** | inference, architecture, moe, attention, memory, quantization, routing |
+| **act** | agent, multimodal |
+| **learn** | rl-training, distillation, alignment |
 
 Requirements:
 
@@ -99,8 +108,8 @@ Requirements:
 - Include real references only.
 - Include runnable Python where appropriate.
 - Include Mermaid and math only if they can render safely on GitHub.
-
-When choosing a category, use the existing repo taxonomy instead of making a new one unless the content clearly does not fit any current category.
+- Include Quick Quiz section (3 MCQ with collapsible answers) before final `---`.
+- Add OG image: run `python scripts/generate_og_images.py --day NN`.
 
 ### 5. Update the Index
 
@@ -119,6 +128,9 @@ Perform local verification before any commit or push.
 - Inspect the GIF for readability: no overlapping labels, no text on top of arrows or bars, and no overcrowded frame with several active ideas competing at once.
 - Re-read the new markdown for broken Mermaid or KaTeX patterns.
 - Check for obvious numbering, path, or category mistakes.
+- Confirm Quick Quiz section is present.
+- Confirm OG image was generated at `assets/og/og-dayNN.png`.
+- Run `.venv/bin/python .github/workflows/quality-checks.yml` locally or trust CI on push.
 
 Load [references/rendering-pitfalls.md](references/rendering-pitfalls.md) whenever you add Mermaid, KaTeX, or GIF content.
 
