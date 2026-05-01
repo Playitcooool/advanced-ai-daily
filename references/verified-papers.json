@@ -187,5 +187,12 @@
     "year": 2026,
     "category": "Agent",
     "verified": true
+  },
+  "2604.28182": {
+    "title": "Exploration Hacking: Can LLMs Learn to Resist RL Training?",
+    "authors": "Jang et al.",
+    "year": 2026,
+    "category": "RL Training",
+    "verified": true
   }
 }

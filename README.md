@@ -12,6 +12,7 @@
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
 | 01 | [GRPO — Group Relative Policy Optimization](tutorials/en/rl-training/01-grpo.md) | ~15 min | Mermaid + GIF |
+| 24 | [Exploration Hacking — When LLMs Learn to Resist RL Training](tutorials/en/rl-training/24-exploration-hacking.md) | ~15 min | Mermaid + GIF |
 
 ### Mixture of Experts
 | # | Topic | Time | Visual |
@@ -87,6 +88,7 @@
 | # | Topic | Time | Visual |
 |:--|:------|:----:|:------:|
 | 01 | [GRPO — 组相对策略优化](tutorials/zh/rl-training/01-grpo.md) | ~15 min | Mermaid + GIF |
+| 24 | [Exploration Hacking — 当 LLM 学会抵抗 RL 训练](tutorials/zh/rl-training/24-exploration-hacking.md) | ~15 min | Mermaid + GIF |
 
 ### 混合专家系统 (Mixture of Experts)
 | # | Topic | Time | Visual |
@@ -221,4 +223,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ---
 
 _Licensed under MIT · [GitHub Repo](https://github.com/Playitcooool/advanced-ai-daily)_
-_44 tutorial files · 23 topics × 2 languages · categorized format_
+_44 tutorial files · 24 topics × 2 languages · categorized format_
