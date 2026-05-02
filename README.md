@@ -52,6 +52,7 @@ Not sure where to begin? Choose a track based on your goal:
 | 17 | [ClawBench — Everyday Online Tasks for Agents](tutorials/en/act/agent/17-clawbench.md) | ~15 min | Mermaid + GIF |
 | 18 | [Qianfan-OCR — Layout-as-Thought for Document Parsing](tutorials/en/act/multimodal/18-qianfan-ocr.md) | ~15 min | Mermaid + GIF |
 | 21 | [Parallel Tool Calling — Stop Making Agents Wait on Themselves](tutorials/en/act/agent/21-parallel-tool-calling.md) | ~15 min | Mermaid + GIF |
+| 25 | [Synthetic Computers at Scale — Long-Horizon Agent Training via Scalable User Simulation](tutorials/en/act/agent/25-synthetic-computers.md) | ~15 min | Mermaid + GIF |
 
 ### Learn — How Models Improve
 *RL training, distillation, alignment*
@@ -95,6 +96,7 @@ Not sure where to begin? Choose a track based on your goal:
 | 17 | [ClawBench — 日常在线任务智能体基准](tutorials/zh/act/agent/17-clawbench.md) | ~15 min | Mermaid + GIF |
 | 18 | [Qianfan-OCR — 版面先思考，再统一解析](tutorials/zh/act/multimodal/18-qianfan-ocr.md) | ~15 min | Mermaid + GIF |
 | 21 | [并行工具调用 — 别让智能体自己等自己](tutorials/zh/act/agent/21-parallel-tool-calling.md) | ~15 min | Mermaid + GIF |
+| 25 | [Synthetic Computers at Scale — 通过规模化用户模拟实现长时域Agent训练](tutorials/zh/act/agent/25-synthetic-computers.md) | ~15 min | Mermaid + GIF |
 
 ### Learn — 模型怎么提升
 *RL 训练、蒸馏、对齐*
