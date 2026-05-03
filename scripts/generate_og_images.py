@@ -129,6 +129,7 @@ if __name__ == "__main__":
         ("Select to Think", 23, "Work"),
         ("Exploration Hacking", 24, "Learn"),
         ("Synthetic Computers at Scale", 25, "Act"),
+        ("PRISM — Pre-alignment via On-policy Distillation", 26, "Learn"),
     ]
 
     for title, day, bucket in tutorials:

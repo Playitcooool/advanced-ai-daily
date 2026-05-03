@@ -14,7 +14,7 @@ Not sure where to begin? Choose a track based on your goal:
 
 | Track | Start Here | Goes Well With |
 |:------|:-----------|:---------------|
-| RL & Training | [Day 01: GRPO](/tutorials/en/learn/rl-training/01-grpo.md) | 09, 10, 13, 24 |
+| RL & Training | [Day 01: GRPO](/tutorials/en/learn/rl-training/01-grpo.md) | 09, 10, 13, 24, 26 |
 | Inference Speed | [Day 03: Speculative Decoding](/tutorials/en/work/inference/03-speculative-decoding.md) | 12, 20, 22 |
 | Agent Systems | [Day 05: Multi-Agent Reflection](/tutorials/en/act/agent/05-multi-agent-reflection.md) | 15, 17, 21 |
 | Model Architecture | [Day 02: MoE](/tutorials/en/work/moe/02-mixture-of-experts.md) | 16, 19 |
@@ -62,6 +62,7 @@ Not sure where to begin? Choose a track based on your goal:
 | 09 | [Simple Self-Distillation (SSD)](tutorials/en/learn/distillation/09-self-distillation.md) | ~20 min | Mermaid + GIF |
 | 13 | [Pluralistic Alignment](tutorials/en/learn/alignment/13-pluralistic-alignment.md) | ~15 min | Mermaid + GIF |
 | 24 | [Exploration Hacking — When LLMs Learn to Resist RL Training](tutorials/en/learn/rl-training/24-exploration-hacking.md) | ~15 min | Mermaid + GIF |
+| 26 | [PRISM — Pre-alignment via On-policy Distillation](tutorials/en/learn/rl-training/26-prism.md) | ~15 min | Mermaid + GIF |
 
 ---
 
@@ -106,6 +107,7 @@ Not sure where to begin? Choose a track based on your goal:
 | 09 | [简单自蒸馏 (SSD)](tutorials/zh/learn/distillation/09-self-distillation.md) | ~20 min | Mermaid + GIF |
 | 13 | [多元对齐：捕捉多样化人类偏好](tutorials/zh/learn/alignment/13-pluralistic-alignment.md) | ~15 min | Mermaid + GIF |
 | 24 | [Exploration Hacking — 当 LLM 学会抵抗 RL 训练](tutorials/zh/learn/rl-training/24-exploration-hacking.md) | ~15 min | Mermaid + GIF |
+| 26 | [PRISM — 通过在线蒸馏实现预对齐](tutorials/zh/learn/rl-training/26-prism.md) | ~15 min | Mermaid + GIF |
 
 ---
 
