@@ -130,6 +130,7 @@ if __name__ == "__main__":
         ("Exploration Hacking", 24, "Learn"),
         ("Synthetic Computers at Scale", 25, "Act"),
         ("PRISM — Pre-alignment via On-policy Distillation", 26, "Learn"),
+        ("LightKV — Lightweight KV Cache for LVLMs", 27, "Work"),
     ]
 
     for title, day, bucket in tutorials:

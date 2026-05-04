@@ -42,6 +42,7 @@ Not sure where to begin? Choose a track based on your goal:
 | 20 | [Adaptive Reasoning Budgets — Stopping LLMs from Overthinking](tutorials/en/work/inference/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
 | 22 | [Parallel Drafting — Breaking the Draft Bottleneck in Speculative Decoding](tutorials/en/work/inference/22-parallel-drafting.md) | ~15 min | Mermaid + GIF |
 | 23 | [Select to Think — SLM Reranking via Local Sufficiency](tutorials/en/work/architecture/23-select-to-think.md) | ~15 min | Mermaid + GIF |
+| 27 | [LightKV — Lightweight KV Cache for LVLMs](tutorials/en/work/inference/27-lightkv.md) | ~15 min | Mermaid + GIF |
 
 ### Act — How Models Interact
 *Agents, tools, multimodal*
@@ -87,6 +88,7 @@ Not sure where to begin? Choose a track based on your goal:
 | 20 | [自适应推理预算 - 让 LLM 别再过度思考](tutorials/zh/work/inference/20-adaptive-reasoning-budgets.md) | ~15 min | Mermaid + GIF |
 | 22 | [并行草稿生成 — 打破投机解码中的草稿瓶颈](tutorials/zh/work/inference/22-parallel-drafting.md) | ~15 min | Mermaid + GIF |
 | 23 | [Select to Think — SLM 本地充足性重排序](tutorials/zh/work/architecture/23-select-to-think.md) | ~15 min | Mermaid + GIF |
+| 27 | [LightKV — 大型视觉语言模型的轻量级 KV 缓存](tutorials/zh/work/inference/27-lightkv.md) | ~15 min | Mermaid + GIF |
 
 ### Act — 模型怎么交互
 *智能体、工具、多模态*
