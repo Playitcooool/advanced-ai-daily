@@ -131,6 +131,7 @@ if __name__ == "__main__":
         ("Synthetic Computers at Scale", 25, "Act"),
         ("PRISM — Pre-alignment via On-policy Distillation", 26, "Learn"),
         ("LightKV — Lightweight KV Cache for LVLMs", 27, "Work"),
+        ("SpecKV — Adaptive Speculative Decoding", 28, "Work"),
     ]
 
     for title, day, bucket in tutorials:
