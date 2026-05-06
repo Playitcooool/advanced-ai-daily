@@ -132,6 +132,7 @@ if __name__ == "__main__":
         ("PRISM — Pre-alignment via On-policy Distillation", 26, "Learn"),
         ("LightKV — Lightweight KV Cache for LVLMs", 27, "Work"),
         ("SpecKV — Adaptive Speculative Decoding", 28, "Work"),
+        ("OpenSeeker-v2 — Frontier Search Agents via Simple SFT", 29, "Act"),
     ]
 
     for title, day, bucket in tutorials:
