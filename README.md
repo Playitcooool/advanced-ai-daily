@@ -44,6 +44,7 @@ Not sure where to begin? Choose a track based on your goal:
 | 23 | [Select to Think — SLM Reranking via Local Sufficiency](tutorials/en/work/architecture/23-select-to-think.md) | ~15 min | Mermaid + GIF |
 | 27 | [LightKV — Lightweight KV Cache for LVLMs](tutorials/en/work/inference/27-lightkv.md) | ~15 min | Mermaid + GIF |
 | 28 | [SpecKV — Adaptive Speculative Decoding](tutorials/en/work/inference/28-speckv.md) | ~15 min | Mermaid + GIF |
+| 30 | [Memini — Multi-Timescale Memory Dynamics](tutorials/en/work/memory/30-memini.md) | ~15 min | Mermaid + GIF |
 
 ### Act — How Models Interact
 *Agents, tools, multimodal*
@@ -92,6 +93,7 @@ Not sure where to begin? Choose a track based on your goal:
 | 23 | [Select to Think — SLM 本地充足性重排序](tutorials/zh/work/architecture/23-select-to-think.md) | ~15 min | Mermaid + GIF |
 | 27 | [LightKV — 大型视觉语言模型的轻量级 KV 缓存](tutorials/zh/work/inference/27-lightkv.md) | ~15 min | Mermaid + GIF |
 | 28 | [SpecKV — 自适应推测解码](tutorials/zh/work/inference/28-speckv.md) | ~15 min | Mermaid + GIF |
+| 30 | [Memini — 多尺度记忆动力学](tutorials/zh/work/memory/30-memini.md) | ~15 min | Mermaid + GIF |
 
 ### Act — 模型怎么交互
 *智能体、工具、多模态*

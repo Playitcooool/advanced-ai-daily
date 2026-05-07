@@ -133,6 +133,7 @@ if __name__ == "__main__":
         ("LightKV — Lightweight KV Cache for LVLMs", 27, "Work"),
         ("SpecKV — Adaptive Speculative Decoding", 28, "Work"),
         ("OpenSeeker-v2 — Frontier Search Agents via Simple SFT", 29, "Act"),
+        ("Memini — Multi-Timescale Memory Dynamics", 30, "Work"),
     ]
 
     for title, day, bucket in tutorials:
